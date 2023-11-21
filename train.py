@@ -75,13 +75,12 @@ def train_nlns(actor, critic, run_id, config):
             training_set[training_set_batch_idx * batch_size + i] = tr_instances[i]
 
         # Log performance every 250 batches
-        if batch_idx % 250 == 0 and batch_idx > 0:
-            mean_loss = np.mean(losses_actor[-250:])
-            mean_critic_loss = np.mean(losses_critic[-250:])
-            mean_reward = np.mean(rewards[-250:])
-            logging.info(
-                f'Batch {batch_idx}/{config.nb_train_batches}, repair costs (reward): {mean_reward:2.3f}, loss: {mean_loss:2.6f}'
-                f', critic_loss: {mean_critic_loss:2.6f}')
+        mean_loss = np.mean(losses_actor[-250:])
+        mean_critic_loss = np.mean(losses_critic[-250:])
+        mean_reward = np.mean(rewards[-250:])
+        logging.info(
+            f'Batch {batch_idx}/{config.nb_train_batches}, repair costs (reward): {mean_reward:2.3f}, loss: {mean_loss:2.6f}'
+            f', critic_loss: {mean_critic_loss:2.6f}')
 
         # Evaluate and save model every 5000 batches
         if batch_idx % 5000 == 0 or batch_idx == config.nb_train_batches:
