@@ -34,6 +34,9 @@ def get_blueprint(blueprint_name):
     elif type == "DF":
         import vrp.dataset_blueprints.DF
         return vrp.dataset_blueprints.DF.dataset[instance]
+    elif type == "PA":
+        import vrp.dataset_blueprints.PA
+        return vrp.dataset_blueprints.PA.dataset[instance]
     raise Exception('Unknown blueprint instance')
 
 
