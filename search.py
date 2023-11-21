@@ -105,6 +105,9 @@ def evaluate_single_search(config, model_path, instance_path):
     results = np.array(list(zip(instance_names, costs, durations)))
     np.savetxt(output_path, results, delimiter=',', fmt=['%s', '%s', '%s'], header="name, cost, runtime")
 
+    output_path = os.path.join(config.output_path, "solutions", 'solutions.txt')
+    np.savetxt(output_path, solution)
+
     logging.info("Solution")
     print(solution)
 
