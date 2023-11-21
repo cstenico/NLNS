@@ -117,4 +117,4 @@ def lns_single_search_mp(instance_path, timelimit, config, model_path, pkl_insta
     pool.terminate()
     duration = time.time() - start_time
     instance.verify_solution(config)
-    return instance.get_costs(config.round_distances), duration
+    return instance.get_costs(config.round_distances), duration, instance.solution
