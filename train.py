@@ -74,7 +74,7 @@ def train_nlns(actor, critic, run_id, config):
         for i in range(batch_size):
             training_set[training_set_batch_idx * batch_size + i] = tr_instances[i]
 
-        # Log performance every 250 batches
+        # Log performance
         mean_loss = np.mean(losses_actor[-250:])
         mean_critic_loss = np.mean(losses_critic[-250:])
         mean_reward = np.mean(rewards[-250:])
@@ -84,6 +84,8 @@ def train_nlns(actor, critic, run_id, config):
 
         # Evaluate and save model every 5000 batches
         if batch_idx % 5000 == 0 or batch_idx == config.nb_train_batches:
+            logging.info("Starting evaluation...")
+
             mean_costs = lns_validation_search(validation_instances, actor, config)
             model_data = {
                 'parameters': actor.state_dict(),
@@ -93,10 +95,10 @@ def train_nlns(actor, critic, run_id, config):
                 'code_version': main.VERSION
             }
 
-            if config.split_delivery:
-                problem_type = "SD"
-            else:
-                problem_type = "C"
+            problem_type = "C"
+
+            logging.info("Torch save...")
+
             torch.save(model_data, os.path.join(config.output_path, "models",
                                                 "model_{0}_{1}_{2}_{3}_{4}.pt".format(problem_type,
                                                                                       config.instance_blueprint,
