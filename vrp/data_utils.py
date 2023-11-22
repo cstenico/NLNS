@@ -246,3 +246,39 @@ def read_instances_pkl(path, offset=0, num_samples=None):
         instances.append(instance)
 
     return instances
+
+
+def load_training_dataset(size, create_solution, path):
+    instances = []
+   
+    if 'RJ' in path:
+        prefix = 'RJ'
+    if 'PA' in path:
+        prefix = 'PA'
+    if 'DF' in path:
+        prefix = 'DF'
+    
+    for i in range(size):
+        instance = read_instance_sd(path + f'/{prefix}_{i}.vrp')
+        instance.create_initial_solution()
+        instances.append(instance)
+    
+    return instances
+
+
+def load_validation_dataset(size, create_solution, path):
+    instances = []
+
+    if 'RJ' in path:
+        prefix = 'RJ'
+    if 'PA' in path:
+        prefix = 'PA'
+    if 'DF' in path:
+        prefix = 'DF'
+    
+    for i in range(size):
+        instance = read_instance_sd(path + f'/{prefix}_{i}.vrp')
+        instance.create_initial_solution()
+        instances.append(instance)
+    
+    return instances

@@ -9,7 +9,7 @@ import datetime
 from search_batch import lns_batch_search
 import repair
 import main
-from vrp.data_utils import create_dataset
+from vrp.data_utils import create_dataset, load_training_dataset, load_validation_dataset
 from search import LnsOperatorPair
 
 
@@ -17,12 +17,21 @@ def train_nlns(actor, critic, run_id, config):
     batch_size = config.batch_size
 
     logging.info("Generating training data...")
-    # Create training and validation set. The initial solutions are created greedily
-    training_set = create_dataset(size=batch_size * config.nb_batches_training_set, config=config,
-                                  create_solution=True, use_cost_memory=False)
-    logging.info("Generating validation data...")
-    validation_instances = create_dataset(size=config.valid_size, config=config, seed=config.validation_seed,
-                                          create_solution=True)
+
+    if(config.create_training_dataset):
+        # Create training and validation set. The initial solutions are created greedily
+        training_set = create_dataset(size=batch_size * config.nb_batches_training_set, config=config,
+                                    create_solution=True, use_cost_memory=False)
+        logging.info("Generating validation data...")
+        validation_instances = create_dataset(size=config.valid_size, config=config, seed=config.validation_seed,
+                                            create_solution=True)
+    else:
+        logging.info("Loading training data...")
+        training_set = load_training_dataset(size=80, create_solution=True, path=config.training_path)
+        logging.info("Loading validation data...")
+        validation_instances = load_validation_dataset(size=10, create_solution=True, path=config.training_path)
+        logging.info("Data loaded...")
+
 
     actor_optim = optim.Adam(actor.parameters(), lr=config.actor_lr)
     actor.train()

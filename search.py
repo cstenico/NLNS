@@ -77,7 +77,7 @@ def evaluate_single_search(config, model_path, instance_path):
     assert model_path is not None, 'No model path given'
     assert instance_path is not None, 'No instance path given'
 
-    instance_names, costs, durations = [], [], []
+    instance_names, costs, durations, solutions, incomplete_tourss = [], [], [], [], []
     logging.info("### Single instance search ###")
 
     if instance_path.endswith(".vrp") or instance_path.endswith(".sd"):
@@ -95,21 +95,23 @@ def evaluate_single_search(config, model_path, instance_path):
     for i, instance_path in enumerate(instance_files_path):
         if instance_path.endswith(".pkl") or instance_path.endswith(".vrp") or instance_path.endswith(".sd"):
             for _ in range(config.nb_runs):
-                cost, duration, solution = search_single.lns_single_search_mp(instance_path, config.lns_timelimit, config,
+                cost, duration, solution, incomplete_tours = search_single.lns_single_search_mp(instance_path, config.lns_timelimit, config,
                                                                     model_path, i)
                 instance_names.append(instance_path)
                 costs.append(cost)
                 durations.append(duration)
+                solutions.append(solution)
+                incomplete_tourss.append(incomplete_tours)
 
     output_path = os.path.join(config.output_path, "search", 'results.txt')
     results = np.array(list(zip(instance_names, costs, durations)))
     np.savetxt(output_path, results, delimiter=',', fmt=['%s', '%s', '%s'], header="name, cost, runtime")
 
     output_path = os.path.join(config.output_path, "solutions", 'solutions.txt')
-    np.savetxt(output_path, solution)
-
-    logging.info("Solution")
-    print(solution)
+    # np.savetxt(output_path, solutions)
+    print(solutions)
+    print ("??????")
+    print(incomplete_tourss)
 
     logging.info(
         f"NLNS single search evaluation results: Total Nb. Runs: {len(costs)}, "

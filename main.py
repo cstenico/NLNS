@@ -35,7 +35,11 @@ if __name__ == '__main__':
     if config.output_path == "":
         config.output_path = os.getcwd()
     now = datetime.datetime.now()
-    config.output_path = os.path.join(config.output_path, "runs", f"run_{now.day}.{now.month}.{now.year}_{run_id}")
+    if config.run_name:
+        config.output_path = os.path.join(config.output_path, "runs", f"run_{config.run_name}")
+    else:
+        config.output_path = os.path.join(config.output_path, "runs", f"run_{now.day}.{now.month}.{now.year}_{run_id}")
+
     os.makedirs(os.path.join(config.output_path, "solutions"))
     os.makedirs(os.path.join(config.output_path, "models"))
     os.makedirs(os.path.join(config.output_path, "search"))
@@ -59,10 +63,12 @@ if __name__ == '__main__':
 
         model_path = train.train_nlns(actor, critic, run_id, config)
         search.evaluate_batch_search(config, model_path)
+
     elif config.mode == "eval_batch":
         if config.instance_path and not config.instance_path.endswith(".pkl"):
             raise Exception("Batch mode only supports .pkl instances files.")
         search.evaluate_batch_search(config, config.model_path)
+
     elif config.mode == "eval_single":
         search.evaluate_single_search(config, config.model_path, config.instance_path)
     else:
