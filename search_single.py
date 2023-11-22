@@ -26,6 +26,8 @@ def lns_single_seach_job(args):
             instance.solution = solution
             start_time_reheating = time.time()
 
+            print("Initialized solution")
+
             # Create a batch of copies of the same instances that can be repaired in parallel
             instance_copies = [deepcopy(instance) for _ in range(config.lns_batch_size)]
 
@@ -33,6 +35,8 @@ def lns_single_seach_job(args):
             # Repeat until the time limit of one reheating iteration is reached
             while time.time() - start_time_reheating < config.lns_timelimit / config.lns_reheating_nb:
                 iter += 1
+
+                print("Start reheating")
 
                 # Set the first config.lns_Z_param percent of the instances/solutions in the batch
                 # to the last accepted solution
@@ -45,6 +49,7 @@ def lns_single_seach_job(args):
                 destroy_procedure = operator_pairs[selected_operator_pair_id].destroy_procedure
                 p_destruction = operator_pairs[selected_operator_pair_id].p_destruction
 
+                print("Destroy")
                 # Destroy instances
                 search.destroy_instances(instance_copies, destroy_procedure, p_destruction)
 
@@ -64,6 +69,8 @@ def lns_single_seach_job(args):
                     #print("tmax", T_max)
 
                 min_costs = min(costs)
+
+                print("Min costs")
 
                 # Update incumbent if a new best solution is found
                 if min_costs <= incumbent_cost:
@@ -87,6 +94,7 @@ def lns_single_seach_job(args):
 
 def lns_single_search_mp(instance_path, timelimit, config, model_path, pkl_instance_id=None):
     instance = read_instance(instance_path, pkl_instance_id)
+    print(instance)
     start_time = time.time()
     instance.create_initial_solution()
     incumbent_costs = instance.get_costs(config.round_distances)
