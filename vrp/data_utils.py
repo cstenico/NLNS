@@ -258,11 +258,14 @@ def load_training_dataset(size, create_solution, path):
     if 'DF' in path:
         prefix = 'DF'
     
-    for i in range(size):
+    for i in range(80):
         instance = read_instance_sd(path + f'/{prefix}_{i}.vrp')
         print(path + f'/{prefix}_{i}.vrp')
         instance.create_initial_solution()
         instances.append(instance)
+    
+    for j in range(100):
+        instances.append(instances)
     
     return instances
 
