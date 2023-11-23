@@ -257,14 +257,13 @@ def load_training_dataset(size, batch_size, path):
         prefix = 'PA'
     if 'DF' in path:
         prefix = 'DF'
-    
     for i in range(size):
         instance = read_instance_sd(path + f'/{prefix}_{i}.vrp')
         print(path + f'/{prefix}_{i}.vrp')
         instance.create_initial_solution()
         instances.append(instance)
     
-    instances = instances * batch_size
+    instances = instances * (batch_size / 10)
     
     return instances
 
