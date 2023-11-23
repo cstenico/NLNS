@@ -248,7 +248,7 @@ def read_instances_pkl(path, offset=0, num_samples=None):
     return instances
 
 
-def load_training_dataset(size, create_solution, path):
+def load_training_dataset(size, batch_size, path):
     instances = []
    
     if 'RJ' in path:
@@ -258,19 +258,18 @@ def load_training_dataset(size, create_solution, path):
     if 'DF' in path:
         prefix = 'DF'
     
-    for i in range(80):
+    for i in range(size):
         instance = read_instance_sd(path + f'/{prefix}_{i}.vrp')
         print(path + f'/{prefix}_{i}.vrp')
         instance.create_initial_solution()
         instances.append(instance)
     
-    for j in range(100):
-        instances.append(instances)
+    instances = instances * batch_size
     
     return instances
 
 
-def load_validation_dataset(size, create_solution, path):
+def load_validation_dataset(size, path):
     instances = []
 
     if 'RJ' in path:

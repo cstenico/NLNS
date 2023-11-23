@@ -24,6 +24,7 @@ import train
 import search
 from actor import VrpActorModel
 from critic import VrpCriticModel
+from pathlib import Path
 
 VERSION = "0.3.0"
 
@@ -36,7 +37,8 @@ if __name__ == '__main__':
         config.output_path = os.getcwd()
     now = datetime.datetime.now()
     if config.run_name:
-        config.output_path = os.path.join(config.output_path, "runs", f"run_{config.run_name}")
+        config.output_path = Path(f"{config.output_path}/runs/run_{config.run_name}_{now}")
+        config.output_path.mkdir(parents=True, exist_ok=True)
     else:
         config.output_path = os.path.join(config.output_path, "runs", f"run_{now.day}.{now.month}.{now.year}_{run_id}")
 

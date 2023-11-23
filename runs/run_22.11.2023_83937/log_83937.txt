@@ -1,0 +1,43 @@
+[INFO]Started
+[INFO]Call: main.py--modeeval_single--model_pathtrained_models/cvrp/XE_16--instance_pathtest_instances/PA_0/025/PA_90.vrp--lns_nb_cpus10--round_distances--lns_timelimit600--lns_reheating_nb10--nb_runs1--devicecpu
+[INFO]Version: 0.3.0
+[INFO]PARAMETERS:
+[INFO]actor_lr: 0.0001
+[INFO]batch_size: 256
+[INFO]create_training_dataset: False
+[INFO]critic_hidden_size: 128
+[INFO]critic_lr: 0.0005
+[INFO]device: cpu
+[INFO]instance_blueprint: ALTR_20
+[INFO]instance_path: test_instances/PA_0/025/PA_90.vrp
+[INFO]lns_Z_param: 0.8
+[INFO]lns_adaptive_search: False
+[INFO]lns_batch_size: 300
+[INFO]lns_destruction: P
+[INFO]lns_destruction_p: 0.3
+[INFO]lns_max_iterations: 50000
+[INFO]lns_nb_cpus: 10
+[INFO]lns_reheating_nb: 10
+[INFO]lns_t_max: 1000
+[INFO]lns_t_min: 10
+[INFO]lns_timelimit: 600
+[INFO]lns_timelimit_validation: 150.0
+[INFO]max_grad_norm: 2.0
+[INFO]mode: eval_single
+[INFO]model_path: trained_models/cvrp/XE_16
+[INFO]nb_batches_training_set: 1500
+[INFO]nb_runs: 1
+[INFO]nb_train_batches: 250000
+[INFO]output_path: /Users/cstenico/Documents/shire/banana/NLNS/runs/run_22.11.2023_83937
+[INFO]pointer_hidden_size: 128
+[INFO]round_distances: True
+[INFO]run_name: None
+[INFO]split_delivery: False
+[INFO]test_size: 2000
+[INFO]training_path: train_instances/PA_0
+[INFO]valid_size: 500
+[INFO]validation_seed: 0
+[INFO]----------
+[INFO]### Single instance search ###
+[INFO]Starting solving a single instance
+[INFO]NLNS single search evaluation results: Total Nb. Runs: 1, Mean Costs: 10339.000 Mean Runtime (s): 673.6

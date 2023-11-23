@@ -12,7 +12,6 @@ import main
 from vrp.data_utils import create_dataset, load_training_dataset, load_validation_dataset
 from search import LnsOperatorPair
 
-
 def train_nlns(actor, critic, run_id, config):
     batch_size = config.batch_size
 
@@ -27,9 +26,9 @@ def train_nlns(actor, critic, run_id, config):
                                             create_solution=True)
     else:
         logging.info("Loading training data...")
-        training_set = load_training_dataset(size=80, create_solution=True, path=config.training_path)
+        training_set = load_training_dataset(size=batch_size, batch_size=config.nb_batches_training_set, path=config.training_path)
         logging.info("Loading validation data...")
-        validation_instances = load_validation_dataset(size=10, create_solution=True, path=config.training_path)
+        validation_instances = load_validation_dataset(size=config.valid_size, path=config.training_path)
         logging.info("Data loaded...")
 
 
