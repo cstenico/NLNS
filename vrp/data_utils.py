@@ -262,7 +262,7 @@ def load_training_dataset(size, batch_size, path):
         instance.create_initial_solution()
         instances.append(instance)
     
-    instances = instances * (batch_size / 9)
+    instances = instances * int(batch_size / 9)
 
     print(f"Len instances {len(instances)}")
     
