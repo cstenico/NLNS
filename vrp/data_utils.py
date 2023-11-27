@@ -1,7 +1,7 @@
 import numpy as np
 from vrp.vrp_problem import VRPInstance
 import pickle
-
+from parser_instance import convert_json_to_vrp
 
 class InstanceBlueprint:
     """Describes the properties of a certain instance type (e.g. number of customers)."""
@@ -197,6 +197,30 @@ def read_instance_vrp(path):
     instance = VRPInstance(dimension - 1, locations, original_locations, demand, capacity)
     return instance
 
+def vrp_raw_to_instance(lines, original_costs):
+    lines = lines.split('\n')
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith("DIMENSION"):
+            dimension = int(line.split(':')[1])
+        elif line.startswith("CAPACITY"):
+            capacity = int(line.split(':')[1])
+        elif line.startswith('NODE_COORD_SECTION'):
+            locations = np.loadtxt(lines[i + 1:i + 1 + dimension], dtype=int)
+            i = i + dimension
+        elif line.startswith('DEMAND_SECTION'):
+            demand = np.loadtxt(lines[i + 1:i + 1 + dimension], dtype=int)
+            i = i + dimension
+        i += 1
+
+    original_locations = locations[:, 1:]
+    locations = original_locations / 1000
+    demand = demand[:, 1:].squeeze()
+
+    instance = VRPInstance(dimension - 1, locations, original_locations, demand, capacity, original_costs)
+    return instance
+
 
 def read_instance_sd(path):
     file = open(path, "r")
@@ -247,22 +271,42 @@ def read_instances_pkl(path, offset=0, num_samples=None):
 
     return instances
 
+def get_instance_from_json(path):
 
-def load_training_dataset(size, batch_size, path):
+    vrp, distance = convert_json_to_vrp(path, saves=False, calculate_real_distance=True)
+
+    instance = vrp_raw_to_instance(vrp, distance)
+
+    instance.create_initial_solution()
+
+    return instance
+
+def load_training_dataset(batch_size, nb_train_batches, path, config):
     instances = []
-   
-    if 'RJ' in path:
-        prefix = 'RJ'
-    if 'PA' in path:
-        prefix = 'PA'
-    if 'DF' in path:
-        prefix = 'DF'
-    for i in range(size * 9):
-        instance = read_instance_sd(path + f'/{prefix}_{i}.vrp')
-        instance.create_initial_solution()
-        instances.append(instance)
+    nb_instances = 90  # default
+
+    regions_dict = {
+        "df": ['0', '1', '2'],
+        "rj": ['0', '1', '2', '3', '4', '5'],
+        "pa": ['0', '1']
+    }
+    region_number = path[-1:]
+    if region_number.isnumeric():
+        region = path[-4:].lower()
+        for i in range(nb_instances):
+            full_path = f'{path}/cvrp-{region_number}-{region[:2]}-{i}.json'
+            print(full_path)
+            instances.append(get_instance_from_json(full_path))
+    else:
+        region = path[-2:].lower()
+        for region_nb in regions_dict[region]:
+            for i in range(nb_instances):
+                full_path = f'{path}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
+                print(full_path)
+                instances.append(get_instance_from_json(full_path))
     
-    instances = instances * int(batch_size / 9)
+    mult_instances = int((batch_size * nb_train_batches) / len(instances))
+    instances = instances * mult_instances
 
     print(f"Len instances {len(instances)}")
     
@@ -272,16 +316,24 @@ def load_training_dataset(size, batch_size, path):
 def load_validation_dataset(size, path):
     instances = []
 
-    if 'RJ' in path:
-        prefix = 'RJ'
-    if 'PA' in path:
-        prefix = 'PA'
-    if 'DF' in path:
-        prefix = 'DF'
-    
-    for i in range(80, 90, 1):
-        instance = read_instance_sd(path + f'/{prefix}_{i}.vrp')
-        instance.create_initial_solution()
-        instances.append(instance)
+    regions_dict = {
+        "df": ['0', '1', '2'],
+        "rj": ['0', '1', '2', '3', '4', '5'],
+        "pa": ['0', '1']
+    }
+    region_number = path[-1:]
+    if region_number.isnumeric():
+        region = path[-4:].lower()
+        for i in range(size):
+            full_path = f'{path}/cvrp-{region_number}-{region[:2]}-{i}.json'
+            print(full_path)
+            instances.append(get_instance_from_json(full_path))
+    else:
+        region = path[-2:].lower()
+        for region_nb in regions_dict[region]:
+            for i in range(size):
+                full_path = f'{path}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
+                print(full_path)
+                instances.append(get_instance_from_json(full_path))
     
     return instances

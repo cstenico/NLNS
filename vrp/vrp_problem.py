@@ -3,7 +3,7 @@ import torch
 
 
 class VRPInstance():
-    def __init__(self, nb_customers, locations, original_locations, demand, capacity, use_cost_memory=True):
+    def __init__(self, nb_customers, locations, original_locations, demand, capacity, original_costs=None, use_cost_memory=True):
         self.nb_customers = nb_customers
         self.locations = locations  # coordinates of all locations in the interval [0, 1]
         self.original_locations = original_locations  # original coordinates of locations (used to compute objective
@@ -25,6 +25,7 @@ class VRPInstance():
             self.costs_memory = np.full((nb_customers + 1, nb_customers + 1), np.nan, dtype="float")
         else:
             self.costs_memory = None
+        self.original_costs = original_costs
 
     def get_n_closest_locations_to(self, origin_location_id, mask, n):
         """Return the idx of the n closest locations sorted by distance."""
@@ -78,7 +79,12 @@ class VRPInstance():
             if t[0][0] != 0 or t[-1][0] != 0:
                 raise Exception("Incomplete solution.")
             for i in range(0, len(t) - 1):
-                cc = np.sqrt((self.original_locations[t[i][0], 0] - self.original_locations[t[i + 1][0], 0]) ** 2
+                if self.original_costs is not None:
+                    from_idx = t[i][0]
+                    to_idx = t[i + 1][0]
+                    cc = self.original_costs[from_idx, to_idx]
+                else:
+                    cc = np.sqrt((self.original_locations[t[i][0], 0] - self.original_locations[t[i + 1][0], 0]) ** 2
                              + (self.original_locations[t[i][0], 1] - self.original_locations[t[i + 1][0], 1]) ** 2)
                 if round:
                     cc = np.round(cc)
@@ -92,9 +98,14 @@ class VRPInstance():
             if len(tour) <= 1:
                 continue
             for i in range(0, len(tour) - 1):
-                cc = np.sqrt((self.original_locations[tour[i][0], 0] - self.original_locations[tour[i + 1][0], 0]) ** 2
-                             + (self.original_locations[tour[i][0], 1] - self.original_locations[
-                    tour[i + 1][0], 1]) ** 2)
+                from_idx = tour[i][0]
+                to_idx = tour[i + 1][0]
+                # Use the cost from the original_costs matrix if available
+                if self.original_costs is not None:
+                    cc = self.original_costs[from_idx, to_idx]
+                else:
+                    cc = np.sqrt((self.original_locations[from_idx, 0] - self.original_locations[to_idx, 0]) ** 2
+                                 + (self.original_locations[from_idx, 1] - self.original_locations[to_idx, 1]) ** 2)
                 if round:
                     cc = np.round(cc)
                 c += cc
@@ -447,7 +458,7 @@ class VRPInstance():
     def __deepcopy__(self, memo):
         solution_copy = self.get_solution_copy()
         new_instance = VRPInstance(self.nb_customers, self.locations, self.original_locations, self.demand,
-                                   self.capacity)
+                                   self.capacity, self.original_costs)
         new_instance.solution = solution_copy
         new_instance.costs_memory = self.costs_memory
 
@@ -483,19 +494,7 @@ def get_mask(origin_nn_input_idx, dynamic_input, instances, config, capacity):
     origin_tour_demands = dynamic_input[torch.arange(batch_size), origin_nn_input_idx, 0]
     combined_demand = origin_tour_demands.unsqueeze(1).expand(batch_size, dynamic_input.shape[1]) + dynamic_input[:, :,
                                                                                                     0]
-
-    if config.split_delivery:
-        multiple_customer_tour = (dynamic_input[torch.arange(batch_size), origin_nn_input_idx, 1] > 1).unsqueeze(1).expand(
-            batch_size, dynamic_input.shape[1])
-
-        # If the origin tour consists of multiple customers mask all tours with multiple customers where
-        # the combined demand is > 1
-        mask[multiple_customer_tour & (combined_demand > capacity) & (dynamic_input[:, :, 1] > 1)] = 0
-
-        # If the origin tour consists of a single customer mask all tours with demand is >= 1
-        mask[(~multiple_customer_tour) & (dynamic_input[:, :, 0] >= capacity)] = 0
-    else:
-        mask[combined_demand > capacity] = 0
+    mask[combined_demand > capacity] = 0
 
     mask[:, 0] = 1  # Always allow to go to the depot
 

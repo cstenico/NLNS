@@ -1,2 +1,0 @@
-# name, cost, runtime
-instances/PA_0/PA.vrp,44789.0,777.9093601703644

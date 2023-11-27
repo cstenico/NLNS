@@ -1,4 +1,62 @@
 import json
+import numpy as np
+from pathlib import Path
+
+pa_regions = ['0', '1']
+rj_regions = ['0', '1', '2', '3', '4', '5']
+df_regions = ['0', '1', '2']
+alphas = ['025', '050', '075', '100', '125']
+
+EARTH_RADIUS_METERS = 6371000
+
+
+def calculate_distance_matrix_great_circle_m(
+    points
+) -> np.ndarray:
+    """Distance matrix using the Great Circle distance
+    This is an Euclidean-like distance but on spheres [1]. In this case it is
+    used to estimate the distance in meters between locations in the Earth.
+
+    Parameters
+    ----------
+    points
+        Iterable with `lat` and `lng` properties with the coordinates of a
+        delivery
+
+    Returns
+    -------
+    distance_matrix
+        Array with the (i, j) entry indicating the Great Circle distance (in
+        meters) between the `i`-th and the `j`-th point
+
+    References
+    ----------
+    [1] https://en.wikipedia.org/wiki/Great-circle_distance
+    Using the third computational formula
+    """
+    points_rad = np.radians([(point['lat'], point['lng']) for point in points])
+
+    delta_lambda = points_rad[:, [1]] - points_rad[:, 1]  # (N x M) lng
+    phi1 = points_rad[:, [0]]  # (N x 1) array of source latitudes
+    phi2 = points_rad[:, 0]  # (1 x M) array of destination latitudes
+
+    delta_sigma = np.arctan2(
+        np.sqrt(
+            (np.cos(phi2) * np.sin(delta_lambda)) ** 2
+            + (
+                np.cos(phi1) * np.sin(phi2)
+                - np.sin(phi1) * np.cos(phi2) * np.cos(delta_lambda)
+            )
+            ** 2
+        ),
+        (
+            np.sin(phi1) * np.sin(phi2)
+            + np.cos(phi1) * np.cos(phi2) * np.cos(delta_lambda)
+        ),
+    )
+
+    return EARTH_RADIUS_METERS * delta_sigma
+
 
 # Helper function to convert latitude and longitude to cartesian coordinates
 def convert_to_grid_coords(lat, lng, lat_min, lat_max, lng_min, lng_max, grid_size=1000, depot_position=(500, 500)):
@@ -16,7 +74,7 @@ def convert_to_grid_coords(lat, lng, lat_min, lat_max, lng_min, lng_max, grid_si
 
     return x, y
 
-def convert_json_to_vrp(file_path, output_path):
+def convert_json_to_vrp(file_path, output_path=None, saves=True, calculate_real_distance=False):
     # Loading the JSON data
     with open(file_path, 'r') as file:
         json_data = json.load(file)
@@ -57,71 +115,13 @@ def convert_json_to_vrp(file_path, output_path):
     vrp_content += "\nDEPOT_SECTION\n1\n-1\nEOF"
 
     # Saving the VRP content to a file
-    with open(output_path, 'w') as file:
-        file.write(vrp_content)
+    if saves:
+        with open(output_path, 'w') as file:
+            file.write(vrp_content)
+    
+    distance = None
+    if calculate_real_distance:
+        points = [depot] + [d['point'] for d in partial_demands]
+        distance = calculate_distance_matrix_great_circle_m(points)
 
-def convert_pa_instances():
-    pa_regions = ['0', '1']
-    alphas = ['025', '050', '075', '100', '125']
-
-    for r in pa_regions:
-        for alpha in alphas:
-            for i in range(90):
-                file_path = f'/Users/cstenico/Documents/shire/tcc-mba/loggibud/data/{alpha}/vrppd-instances-1.0/train/pa-{r}/cvrp-{r}-pa-{i}.json'
-                output_path = f'train_instances/PA_{r}/{alpha}/PA_{i}.vrp'
-                convert_json_to_vrp(file_path, output_path)
-
-def convert_dev_pa_instances():
-    pa_regions = ['0', '1']
-    alphas = ['025', '050', '075', '100', '125']
-
-    for r in pa_regions:
-        for alpha in alphas:
-            for i in range(90, 120):
-                file_path = f'/Users/cstenico/Documents/shire/tcc-mba/loggibud/data/{alpha}/vrppd-instances-1.0/dev/pa-{r}/cvrp-{r}-pa-{i}.json'
-                output_path = f'test_instances/PA_{r}/{alpha}/PA_{i}.vrp'
-                convert_json_to_vrp(file_path, output_path)
-
-def convert_df_instances():
-    df_regions = ['0', '1', '2']
-    alphas = ['025', '050', '075', '100', '125']
-
-    for r in df_regions:
-        for alpha in alphas:
-            for i in range(90):
-                file_path = f'/Users/cstenico/Documents/shire/tcc-mba/loggibud/data/{alpha}/vrppd-instances-1.0/train/df-{r}/cvrp-{r}-df-{i}.json'
-                output_path = f'train_instances/DF_{r}/{alpha}/DF_{i}.vrp'
-                convert_json_to_vrp(file_path, output_path)
-
-def convert_dev_df_instances():
-    df_regions = ['0', '1', '2']
-    alphas = ['025', '050', '075', '100', '125']
-
-    for r in df_regions:
-        for alpha in alphas:
-            for i in range(90, 120):
-                file_path = f'/Users/cstenico/Documents/shire/tcc-mba/loggibud/data/{alpha}/vrppd-instances-1.0/dev/df-{r}/cvrp-{r}-df-{i}.json'
-                output_path = f'test_instances/DF_{r}/{alpha}/DF_{i}.vrp'
-                convert_json_to_vrp(file_path, output_path)
-
-def convert_rj_instances():
-    rj_regions = ['0', '1', '2']
-    alphas = ['025', '050', '075', '100', '125']
-
-    for r in rj_regions:
-        for alpha in alphas:
-            for i in range(90):
-                file_path = f'/Users/cstenico/Documents/shire/tcc-mba/loggibud/data/{alpha}/vrppd-instances-1.0/train/rj-{r}/cvrp-{r}-rj-{i}.json'
-                output_path = f'train_instances/RJ_{r}/{alpha}/RJ_{i}.vrp'
-                convert_json_to_vrp(file_path, output_path)
-
-def convert_dev_rj_instances():
-    rj_regions = ['0', '1', '2', '3', '4', '5']
-    alphas = ['025', '050', '075', '100', '125']
-
-    for r in rj_regions:
-        for alpha in alphas:
-            for i in range(90, 120):
-                file_path = f'/Users/cstenico/Documents/shire/tcc-mba/loggibud/data/{alpha}/vrppd-instances-1.0/dev/rj-{r}/cvrp-{r}-rj-{i}.json'
-                output_path = f'test_instances/RJ_{r}/{alpha}/RJ_{i}.vrp'
-                convert_json_to_vrp(file_path, output_path)
+    return vrp_content, distance

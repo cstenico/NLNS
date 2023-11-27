@@ -18,17 +18,41 @@ def train_nlns(actor, critic, run_id, config):
     logging.info("Generating training data...")
 
     if(config.create_training_dataset):
+
         # Create training and validation set. The initial solutions are created greedily
-        training_set = create_dataset(size=batch_size * config.nb_batches_training_set, config=config,
-                                    create_solution=True, use_cost_memory=False)
+        training_set = create_dataset(
+            size=batch_size * config.nb_batches_training_set,
+            config=config,
+            create_solution=True,
+            use_cost_memory=False
+        )
+
         logging.info("Generating validation data...")
-        validation_instances = create_dataset(size=config.valid_size, config=config, seed=config.validation_seed,
-                                            create_solution=True)
+
+        validation_instances = create_dataset(
+            size=config.valid_size,
+            config=config,
+            seed=config.validation_seed,
+            create_solution=True
+        )
+
     else:
         logging.info("Loading training data...")
-        training_set = load_training_dataset(size=batch_size, batch_size=config.nb_batches_training_set, path=config.training_path)
+
+        training_set = load_training_dataset(
+            batch_size=batch_size,
+            nb_train_batches=config.nb_train_batches,
+            path=config.training_path,
+            config=config,
+        )
+        
         logging.info("Loading validation data...")
-        validation_instances = load_validation_dataset(size=config.valid_size, path=config.training_path)
+        
+        validation_instances = load_validation_dataset(
+            size=config.valid_size,
+            path=config.training_path
+        )
+        
         logging.info("Data loaded...")
 
 
@@ -37,7 +61,7 @@ def train_nlns(actor, critic, run_id, config):
     critic_optim = optim.Adam(critic.parameters(), lr=config.critic_lr)
     critic.train()
 
-    losses_actor, rewards, diversity_values, losses_critic = [], [], [], []
+    losses_actor, rewards, losses_critic = [], [], []
     incumbent_costs = np.inf
     start_time = datetime.datetime.now()
 

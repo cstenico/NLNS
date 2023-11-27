@@ -108,10 +108,8 @@ def evaluate_single_search(config, model_path, instance_path):
     np.savetxt(output_path, results, delimiter=',', fmt=['%s', '%s', '%s'], header="name, cost, runtime")
 
     output_path = os.path.join(config.output_path, "solutions", 'solutions.txt')
-    # np.savetxt(output_path, solutions)
+    np.savetxt(output_path, solutions, fmt='%s')
     print(solutions)
-    print ("??????")
-    print(incomplete_tourss)
 
     logging.info(
         f"NLNS single search evaluation results: Total Nb. Runs: {len(costs)}, "

@@ -109,7 +109,7 @@ def repair(instances, actor, config, critic=None):
     static_input = torch.from_numpy(static_input).to(config.device).float()
     dynamic_input = torch.from_numpy(dynamic_input).to(config.device).long()
 
-    vehicle_capacity = instances[0].capacity # Assumes that the vehicle capcity is identical for all instances of the batch
+    vehicle_capacity = instances[0].capacity # Assumes that the vehicle capacity is identical for all instances of the batch
 
     cost_estimate = None
     if critic is not None:
