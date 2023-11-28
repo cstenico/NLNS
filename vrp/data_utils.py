@@ -207,10 +207,10 @@ def vrp_raw_to_instance(lines, original_costs):
         elif line.startswith("CAPACITY"):
             capacity = int(line.split(':')[1])
         elif line.startswith('NODE_COORD_SECTION'):
-            locations = np.loadtxt(lines[i + 1:i + 1 + dimension], dtype=int)
+            locations = np.loadtxt(lines[i + 1:i + 1 + dimension], dtype=float)
             i = i + dimension
         elif line.startswith('DEMAND_SECTION'):
-            demand = np.loadtxt(lines[i + 1:i + 1 + dimension], dtype=int)
+            demand = np.loadtxt(lines[i + 1:i + 1 + dimension], dtype=float)
             i = i + dimension
         i += 1
 
@@ -285,19 +285,34 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
     instances = []
     nb_instances = 90  # default
 
+    regions = ['rj', 'df', 'pa']
+
     regions_dict = {
         "df": ['0', '1', '2'],
         "rj": ['0', '1', '2', '3', '4', '5'],
         "pa": ['0', '1']
     }
+
     region_number = path[-1:]
-    if region_number.isnumeric():
+
+    print(path[-4:].lower())
+
+    if region_number.isnumeric(): # Train only region of the city
         region = path[-4:].lower()
         for i in range(nb_instances):
             full_path = f'{path}/cvrp-{region_number}-{region[:2]}-{i}.json'
             print(full_path)
             instances.append(get_instance_from_json(full_path))
-    else:
+
+    elif path[-5:].lower() == 'train': # Train Brasil
+        for region in regions:
+            for region_nb in regions_dict[region]:
+                for i in range(nb_instances):
+                    full_path = f'{path}/{region}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
+                    print(full_path)
+                    instances.append(get_instance_from_json(full_path))
+
+    else: # train city
         region = path[-2:].lower()
         for region_nb in regions_dict[region]:
             for i in range(nb_instances):

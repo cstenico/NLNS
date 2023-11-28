@@ -91,13 +91,16 @@ def convert_json_to_vrp(file_path, output_path=None, saves=True, calculate_real_
     lng_min, lng_max = min(longitudes), max(longitudes)
 
     # Converting the depot and demands to VRP format with the new coordinate system
-    depot_coords = convert_to_grid_coords(depot['lat'], depot['lng'], lat_min, lat_max, lng_min, lng_max)
+    #depot_coords = convert_to_grid_coords(depot['lat'], depot['lng'], lat_min, lat_max, lng_min, lng_max)
+    depot_coords = (depot['lat'], depot['lng'])
+
     demands = [f"1\t0"]  # Demand at depot is zero
 
     # Preparing nodes with the new coordinate system
     nodes = [f"1\t{depot_coords[0]}\t{depot_coords[1]}"]  # Depot as the first node
     for i, demand in enumerate(partial_demands, start=2):
-        node_coords = convert_to_grid_coords(demand['point']['lat'], demand['point']['lng'], lat_min, lat_max, lng_min, lng_max)
+        #node_coords = convert_to_grid_coords(demand['point']['lat'], demand['point']['lng'], lat_min, lat_max, lng_min, lng_max)
+        node_coords = (demand['point']['lat'], demand['point']['lng'])
         nodes.append(f"{i}\t{node_coords[0]}\t{node_coords[1]}")
         demands.append(f"{i}\t{demand['size'] if demand['type'] == 'PICKUP' else -demand['size']}")
         # demands.append(f"{i}\t{demand['size']}")
