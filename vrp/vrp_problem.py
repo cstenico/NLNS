@@ -501,8 +501,6 @@ def get_mask(origin_nn_input_idx, dynamic_input, instances, config, capacity):
             loc2 = instances[i].original_locations[origin_tour[j+1]]
             total_distance += np.linalg.norm(loc2 - loc1)
 
-            print(loc1)
-
         total_distance_km = total_distance * 111.32  # Approximate conversion factor for degrees to kilometers
 
         # Mask out routes that are longer than 240 km
