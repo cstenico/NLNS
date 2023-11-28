@@ -67,7 +67,8 @@ def convert_json_to_vrp(file_path, output_path=None, saves=True, calculate_real_
     partial_demands = json_data['demands']
 
     if load_partial_instance:
-        partial_demands = random.sample(partial_demands, int(len(partial_demands) * 0.1))
+        #partial_demands = random.sample(partial_demands, int(len(partial_demands) * 0.1))
+        partial_demands = random.sample(partial_demands, 300)
 
     # Converting the depot and demands to VRP format with the new coordinate system
     #depot_coords = convert_to_grid_coords(depot['lat'], depot['lng'], lat_min, lat_max, lng_min, lng_max)

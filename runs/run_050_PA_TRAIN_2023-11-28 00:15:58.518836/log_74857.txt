@@ -865,3 +865,11 @@
 [INFO]Batch 819/1800, repair costs (reward): 2638156.941, loss: -2987424135.614500, critic_loss: 2261622182643.711914
 [INFO]Batch 820/1800, repair costs (reward): 2658114.130, loss: -2984664546.702500, critic_loss: 2261515012638.720215
 [INFO]Batch 821/1800, repair costs (reward): 2682715.136, loss: -2981133651.886500, critic_loss: 2261148434302.976074
+[INFO]Batch 822/1800, repair costs (reward): 2706384.075, loss: -2976872096.990500, critic_loss: 2260802130348.032227
+[INFO]Batch 823/1800, repair costs (reward): 2727850.904, loss: -2973598857.854500, critic_loss: 2260490105686.016113
+[INFO]Batch 824/1800, repair costs (reward): 2748421.697, loss: -2969739013.150500, critic_loss: 2260314990118.912109
+[INFO]Batch 825/1800, repair costs (reward): 2771853.624, loss: -2968056655.870500, critic_loss: 2260081179396.096191
+[INFO]Batch 826/1800, repair costs (reward): 2792550.658, loss: -2966415019.518500, critic_loss: 2259992328079.359863
+[INFO]Batch 827/1800, repair costs (reward): 2816562.323, loss: -2961174049.902500, critic_loss: 2260167643662.335938
+[INFO]Batch 828/1800, repair costs (reward): 2834926.694, loss: -2959503044.622500, critic_loss: 2259539716655.104004
+[INFO]Batch 829/1800, repair costs (reward): 2856517.582, loss: -2958802156.294500, critic_loss: 2259494998984.704102
