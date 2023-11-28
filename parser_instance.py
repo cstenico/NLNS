@@ -59,8 +59,10 @@ def calculate_distance_matrix_great_circle_m(
 
 def convert_json_to_vrp(file_path, output_path=None, saves=True, calculate_real_distance=False, load_partial_instance=False):
     # Loading the JSON data
-    with open(file_path, 'r') as file:
-        json_data = json.load(file)
+
+    file =  open(file_path, 'r')
+    json_data = json.load(file)
+    file.close()
 
     # Extracting depot data
     depot = json_data['depot']

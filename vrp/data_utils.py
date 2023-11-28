@@ -300,7 +300,7 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
     if region_number.isnumeric(): # Train only region of the city
         region = path[-4:].lower()
         for i in range(nb_instances):
-            for j in range(10):
+            for j in range(batch_size):
                 full_path = f'{path}/cvrp-{region_number}-{region[:2]}-{i}.json'
                 print(full_path)
                 instances.append(get_instance_from_json(full_path, config.load_partial_instance))
@@ -309,7 +309,7 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
         for region in regions:
             for region_nb in regions_dict[region]:
                 for i in range(nb_instances):
-                    for j in range(10):
+                    for j in range(batch_size):
                         full_path = f'{path}/{region}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
                         print(full_path)
                         instances.append(get_instance_from_json(full_path, config.load_partial_instance))
@@ -318,7 +318,7 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
         region = path[-2:].lower()
         for region_nb in regions_dict[region]:
             for i in range(nb_instances):
-                for j in range(10):
+                for j in range(batch_size):
                     full_path = f'{path}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
                     print(full_path)
                     instances.append(get_instance_from_json(full_path, config.load_partial_instance))
