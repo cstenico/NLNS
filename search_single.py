@@ -55,10 +55,12 @@ def lns_single_seach_job(args):
 
                 # Repair instances
                 for i in range(int(len(instance_copies) / config.lns_batch_size)):
+                    print("Repair")
                     with torch.no_grad():
                         repair.repair(
                             instance_copies[i * config.lns_batch_size: (i + 1) * config.lns_batch_size], actor, config)
 
+                print("Costs Memory")
                 costs = [instance.get_costs_memory(config.round_distances) for instance in instance_copies]
 
                 # Calculate the T_max and T_factor values for simulated annealing in the first iteration
@@ -66,7 +68,7 @@ def lns_single_seach_job(args):
                     q75, q25 = np.percentile(costs, [75, 25])
                     T_max = q75 - q25
                     T_factor = -math.log(T_max / T_min)
-                    #print("tmax", T_max)
+                    print("tmax", T_max)
 
                 min_costs = min(costs)
 

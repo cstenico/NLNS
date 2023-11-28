@@ -63,8 +63,14 @@ class VRPInstance():
                 from_idx = t[i][0]
                 to_idx = t[i + 1][0]
                 if np.isnan(self.costs_memory[from_idx, to_idx]):
-                    cc = np.sqrt((self.original_locations[from_idx, 0] - self.original_locations[to_idx, 0]) ** 2
-                                 + (self.original_locations[from_idx, 1] - self.original_locations[to_idx, 1]) ** 2)
+                    cc = calculate_distance_matrix_great_circle_m(
+                        [
+                            {'lat': self.original_locations[from_idx, 0], 'lng': self.original_locations[from_idx, 1]},
+                            {'lat': self.original_locations[to_idx, 0], 'lng': self.original_locations[to_idx, 1]},
+                        ])[0][1]
+    
+                    #cc = np.sqrt((self.original_locations[from_idx, 0] - self.original_locations[to_idx, 0]) ** 2
+                    #             + (self.original_locations[from_idx, 1] - self.original_locations[to_idx, 1]) ** 2)
                     if round:
                         cc = np.round(cc)
                     self.costs_memory[from_idx, to_idx] = cc
