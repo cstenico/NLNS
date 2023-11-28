@@ -161,7 +161,9 @@ def get_customer_demand(blueprint, customer_position):
 
 
 def read_instance(path, pkl_instance_idx=0):
-    if path.endswith('.vrp'):
+    if path.endswith('.json'):
+        return get_instance_from_json(path=path, load_partial_instance=False)
+    elif path.endswith('.vrp'):
         return read_instance_vrp(path)
     elif path.endswith('.sd'):
         return read_instance_sd(path)
