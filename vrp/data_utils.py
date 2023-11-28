@@ -271,9 +271,9 @@ def read_instances_pkl(path, offset=0, num_samples=None):
 
     return instances
 
-def get_instance_from_json(path):
+def get_instance_from_json(path, load_partial_instance=False):
 
-    vrp, distance = convert_json_to_vrp(path, saves=False, calculate_real_distance=True)
+    vrp, distance = convert_json_to_vrp(path, saves=False, calculate_real_distance=True, load_partial_instance=load_partial_instance)
 
     instance = vrp_raw_to_instance(vrp, distance)
 
@@ -300,25 +300,28 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
     if region_number.isnumeric(): # Train only region of the city
         region = path[-4:].lower()
         for i in range(nb_instances):
-            full_path = f'{path}/cvrp-{region_number}-{region[:2]}-{i}.json'
-            print(full_path)
-            instances.append(get_instance_from_json(full_path))
+            for j in range(10):
+                full_path = f'{path}/cvrp-{region_number}-{region[:2]}-{i}.json'
+                print(full_path)
+                instances.append(get_instance_from_json(full_path, config.load_partial_instance))
 
     elif path[-5:].lower() == 'train': # Train Brasil
         for region in regions:
             for region_nb in regions_dict[region]:
                 for i in range(nb_instances):
-                    full_path = f'{path}/{region}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
-                    print(full_path)
-                    instances.append(get_instance_from_json(full_path))
+                    for j in range(10):
+                        full_path = f'{path}/{region}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
+                        print(full_path)
+                        instances.append(get_instance_from_json(full_path, config.load_partial_instance))
 
     else: # train city
         region = path[-2:].lower()
         for region_nb in regions_dict[region]:
             for i in range(nb_instances):
-                full_path = f'{path}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
-                print(full_path)
-                instances.append(get_instance_from_json(full_path))
+                for j in range(10):
+                    full_path = f'{path}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
+                    print(full_path)
+                    instances.append(get_instance_from_json(full_path, config.load_partial_instance))
     
     mult_instances = int((batch_size * nb_train_batches) / len(instances))
     instances = instances * mult_instances
@@ -328,27 +331,42 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
     return instances
 
 
-def load_validation_dataset(size, path):
+def load_validation_dataset(size, path, config):
     instances = []
+
+    regions = ['rj', 'df', 'pa']
 
     regions_dict = {
         "df": ['0', '1', '2'],
         "rj": ['0', '1', '2', '3', '4', '5'],
         "pa": ['0', '1']
     }
+
     region_number = path[-1:]
-    if region_number.isnumeric():
+
+    print(path[-4:].lower())
+
+    if region_number.isnumeric(): # Train only region of the city
         region = path[-4:].lower()
         for i in range(size):
             full_path = f'{path}/cvrp-{region_number}-{region[:2]}-{i}.json'
             print(full_path)
-            instances.append(get_instance_from_json(full_path))
-    else:
+            instances.append(get_instance_from_json(full_path, config.load_partial_instance))
+
+    elif path[-5:].lower() == 'train': # Train Brasil
+        for region in regions:
+            for region_nb in regions_dict[region]:
+                for i in range(size):
+                    full_path = f'{path}/{region}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
+                    print(full_path)
+                    instances.append(get_instance_from_json(full_path, config.load_partial_instance))
+
+    else: # train city
         region = path[-2:].lower()
         for region_nb in regions_dict[region]:
             for i in range(size):
                 full_path = f'{path}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
                 print(full_path)
-                instances.append(get_instance_from_json(full_path))
+                instances.append(get_instance_from_json(full_path, config.load_partial_instance))
     
     return instances

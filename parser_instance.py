@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from pathlib import Path
+import random
 
 pa_regions = ['0', '1']
 rj_regions = ['0', '1', '2', '3', '4', '5']
@@ -57,38 +57,17 @@ def calculate_distance_matrix_great_circle_m(
 
     return EARTH_RADIUS_METERS * delta_sigma
 
-
-# Helper function to convert latitude and longitude to cartesian coordinates
-def convert_to_grid_coords(lat, lng, lat_min, lat_max, lng_min, lng_max, grid_size=1000, depot_position=(500, 500)):
-    # Normalizing latitude and longitude
-    lat_norm = (lat - lat_min) / (lat_max - lat_min)
-    lng_norm = (lng - lng_min) / (lng_max - lng_min)
-
-    # Scaling to the grid size
-    x = int(lng_norm * grid_size)
-    y = int(lat_norm * grid_size)
-
-    # Translating so that depot is at the specified position
-    x += (depot_position[0] - int(grid_size / 2))
-    y += (depot_position[1] - int(grid_size / 2))
-
-    return x, y
-
-def convert_json_to_vrp(file_path, output_path=None, saves=True, calculate_real_distance=False):
+def convert_json_to_vrp(file_path, output_path=None, saves=True, calculate_real_distance=False, load_partial_instance=False):
     # Loading the JSON data
     with open(file_path, 'r') as file:
         json_data = json.load(file)
 
     # Extracting depot data
     depot = json_data['depot']
-
     partial_demands = json_data['demands']
 
-    # Finding the min and max latitude and longitude values from the JSON data
-    latitudes = [demand['point']['lat'] for demand in partial_demands] + [depot['lat']]
-    longitudes = [demand['point']['lng'] for demand in partial_demands] + [depot['lng']]
-    lat_min, lat_max = min(latitudes), max(latitudes)
-    lng_min, lng_max = min(longitudes), max(longitudes)
+    if load_partial_instance:
+        partial_demands = random.sample(partial_demands, int(len(partial_demands) * 0.1))
 
     # Converting the depot and demands to VRP format with the new coordinate system
     #depot_coords = convert_to_grid_coords(depot['lat'], depot['lng'], lat_min, lat_max, lng_min, lng_max)
@@ -98,12 +77,13 @@ def convert_json_to_vrp(file_path, output_path=None, saves=True, calculate_real_
 
     # Preparing nodes with the new coordinate system
     nodes = [f"1\t{depot_coords[0]}\t{depot_coords[1]}"]  # Depot as the first node
-    for i, demand in enumerate(partial_demands, start=2):
-        #node_coords = convert_to_grid_coords(demand['point']['lat'], demand['point']['lng'], lat_min, lat_max, lng_min, lng_max)
+    for i, demand in enumerate(partial_demands, start=0):
+
         node_coords = (demand['point']['lat'], demand['point']['lng'])
+
         nodes.append(f"{i}\t{node_coords[0]}\t{node_coords[1]}")
+
         demands.append(f"{i}\t{demand['size'] if demand['type'] == 'PICKUP' else -demand['size']}")
-        # demands.append(f"{i}\t{demand['size']}")
 
     # Constructing the VRP file content
     vrp_content = f"NAME : {json_data['name']}\n"

@@ -26,6 +26,8 @@ def get_config():
     parser.add_argument('--valid_size', default=500, type=int)
     parser.add_argument('--create_training_dataset', default=False, type=bool)
     parser.add_argument('--training_path', default='train_instances/PA_0', type=str)
+    parser.add_argument('--load_partial_instance', default=False, type=bool)
+
 
     # Search
     parser.add_argument('--model_path', default=None, type=str)

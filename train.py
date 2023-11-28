@@ -50,7 +50,8 @@ def train_nlns(actor, critic, run_id, config):
         
         validation_instances = load_validation_dataset(
             size=config.valid_size,
-            path=config.training_path
+            path=config.training_path,
+            config=config,
         )
         
         logging.info("Data loaded...")
