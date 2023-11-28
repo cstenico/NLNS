@@ -497,16 +497,17 @@ def get_mask(origin_nn_input_idx, dynamic_input, instances, config, capacity):
         # Calculate the total distance of the tour
         total_distance = 0
         for j in range(len(origin_tour)-1):
-            loc1 = instances[i].locations[origin_tour[j]]
-            loc2 = instances[i].locations[origin_tour[j+1]]
+            loc1 = instances[i].original_locations[origin_tour[j]]
+            loc2 = instances[i].original_locations[origin_tour[j+1]]
             total_distance += np.linalg.norm(loc2 - loc1)
+
+            print(loc1)
 
         total_distance_km = total_distance * 111.32  # Approximate conversion factor for degrees to kilometers
 
         # Mask out routes that are longer than 240 km
         if total_distance_km > 240:
             mask[i, :] = 0
-            continue
 
         # Find the start of the tour in the nn input
         # e.g. for the tour [2, 3] two entries in nn input exists
