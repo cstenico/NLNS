@@ -271,9 +271,9 @@ def read_instances_pkl(path, offset=0, num_samples=None):
 
     return instances
 
-def get_instance_from_json(path, load_partial_instance=False):
+def get_instance_from_json(path, load_partial_instance=False, calculate_real_distance=False):
 
-    vrp, distance = convert_json_to_vrp(path, saves=False, calculate_real_distance=True, load_partial_instance=load_partial_instance)
+    vrp, distance = convert_json_to_vrp(path, saves=False, calculate_real_distance=calculate_real_distance, load_partial_instance=load_partial_instance)
 
     instance = vrp_raw_to_instance(vrp, distance)
 
@@ -303,7 +303,7 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
             for j in range(batch_size):
                 full_path = f'{path}/cvrp-{region_number}-{region[:2]}-{i}.json'
                 print(full_path)
-                instances.append(get_instance_from_json(full_path, config.load_partial_instance))
+                instances.append(get_instance_from_json(full_path, config.load_partial_instance, calculate_real_distance=config.calculate_real_distance))
 
     elif path[-5:].lower() == 'train': # Train Brasil
         for region in regions:
@@ -312,7 +312,7 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
                     for j in range(batch_size):
                         full_path = f'{path}/{region}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
                         print(full_path)
-                        instances.append(get_instance_from_json(full_path, config.load_partial_instance))
+                        instances.append(get_instance_from_json(full_path, config.load_partial_instance, calculate_real_distance=config.calculate_real_distance))
 
     else: # train city
         region = path[-2:].lower()
@@ -321,7 +321,7 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
                 for j in range(batch_size):
                     full_path = f'{path}-{region_nb}/cvrp-{region_nb}-{region}-{i}.json'
                     print(full_path)
-                    instances.append(get_instance_from_json(full_path, config.load_partial_instance))
+                    instances.append(get_instance_from_json(full_path, config.load_partial_instance, calculate_real_distance=config.calculate_real_distance))
     
     mult_instances = int((batch_size * nb_train_batches) / len(instances))
     instances = instances * mult_instances

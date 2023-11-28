@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from parser_instance import calculate_distance_matrix_great_circle_m
 
 
 class VRPInstance():
@@ -84,8 +85,13 @@ class VRPInstance():
                     to_idx = t[i + 1][0]
                     cc = self.original_costs[from_idx, to_idx]
                 else:
-                    cc = np.sqrt((self.original_locations[t[i][0], 0] - self.original_locations[t[i + 1][0], 0]) ** 2
-                             + (self.original_locations[t[i][0], 1] - self.original_locations[t[i + 1][0], 1]) ** 2)
+                    cc = calculate_distance_matrix_great_circle_m(
+                        [
+                            {'lat': self.original_locations[t[i][0], 0], 'lng': self.original_locations[t[i][0], 1]},
+                            {'lat':  self.original_locations[t[i + 1][0], 0], 'lng': self.original_locations[t[i + 1][0], 1]},
+                        ])[0][1]
+                    #cc = np.sqrt((self.original_locations[t[i][0], 0] - self.original_locations[t[i + 1][0], 0]) ** 2
+                    #         + (self.original_locations[t[i][0], 1] - self.original_locations[t[i + 1][0], 1]) ** 2)
                 if round:
                     cc = np.round(cc)
                 c += cc
@@ -104,8 +110,13 @@ class VRPInstance():
                 if self.original_costs is not None:
                     cc = self.original_costs[from_idx, to_idx]
                 else:
-                    cc = np.sqrt((self.original_locations[from_idx, 0] - self.original_locations[to_idx, 0]) ** 2
-                                 + (self.original_locations[from_idx, 1] - self.original_locations[to_idx, 1]) ** 2)
+                    cc = calculate_distance_matrix_great_circle_m(
+                        [
+                            {'lat': self.original_locations[from_idx, 0], 'lng': self.original_locations[from_idx, 1]},
+                            {'lat': self.original_locations[to_idx, 0], 'lng': self.original_locations[to_idx, 1]},
+                        ])[0][1]
+                    #cc = np.sqrt((self.original_locations[from_idx, 0] - self.original_locations[to_idx, 0]) ** 2
+                    #             + (self.original_locations[from_idx, 1] - self.original_locations[to_idx, 1]) ** 2)
                 if round:
                     cc = np.round(cc)
                 c += cc

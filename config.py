@@ -27,6 +27,7 @@ def get_config():
     parser.add_argument('--create_training_dataset', default=False, type=bool)
     parser.add_argument('--training_path', default='train_instances/PA_0', type=str)
     parser.add_argument('--load_partial_instance', default=False, type=bool)
+    parser.add_argument('--calculate_real_distance', default=False, type=bool)
 
 
     # Search
