@@ -96,7 +96,7 @@ def evaluate_single_search(config, model_path, instance_path):
         raise Exception("Unknown instance file format.")
 
     for i, instance_path in enumerate(instance_files_path):
-        if instance_path.endswith(".pkl") or instance_path.endswith(".vrp") or instance_path.endswith(".sd"):
+        if instance_path.endswith(".pkl") or instance_path.endswith(".vrp") or instance_path.endswith(".sd") or instance_path.endswith(".json"):
             for _ in range(config.nb_runs):
                 cost, duration, solution, incomplete_tours = search_single.lns_single_search_mp(instance_path, config.lns_timelimit, config,
                                                                     model_path, i)
