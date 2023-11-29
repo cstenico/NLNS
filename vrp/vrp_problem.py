@@ -390,7 +390,7 @@ class VRPInstance():
         # Case 1
         if len(tour_from) > 1 and len(tour_to) > 1:
             combined_demand = sum(l[1] for l in tour_from) + sum(l[1] for l in tour_to)
-            assert combined_demand <= self.capacity  # This is ensured by the masking schema
+            assert abs(combined_demand) <= self.capacity  # This is ensured by the masking schema
 
             # The two incomplete tours are combined to one (in)complete tour. All network inputs associated with the
             # two connected tour ends are set to 0
@@ -528,7 +528,7 @@ def get_mask(origin_nn_input_idx, dynamic_input, instances, config, capacity):
     origin_tour_demands = dynamic_input[torch.arange(batch_size), origin_nn_input_idx, 0]
 
     combined_demand = origin_tour_demands.unsqueeze(1).expand(batch_size, dynamic_input.shape[1]) + dynamic_input[:, :,0]
-    #mask[abs(combined_demand) > capacity] = 0
+    mask[abs(combined_demand) > capacity] = 0
 
     mask[:, 0] = 1  # Always allow to go to the depot
 
