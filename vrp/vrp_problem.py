@@ -524,8 +524,10 @@ def get_mask(origin_nn_input_idx, dynamic_input, instances, config, capacity):
     mask = torch.from_numpy(mask)
 
     origin_tour_demands = dynamic_input[torch.arange(batch_size), origin_nn_input_idx, 0]
+
     combined_demand = origin_tour_demands.unsqueeze(1).expand(batch_size, dynamic_input.shape[1]) + dynamic_input[:, :,0]
-    mask[combined_demand > capacity] = 0
+    
+    mask[abs(combined_demand) > capacity] = 0
 
     mask[:, 0] = 1  # Always allow to go to the depot
 
