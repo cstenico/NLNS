@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from parser_instance import calculate_distance_matrix_great_circle_m
-import pdb
+
 
 class VRPInstance():
     def __init__(self, nb_customers, locations, original_locations, demand, capacity, original_costs=None, use_cost_memory=True):
@@ -487,6 +487,7 @@ class VRPInstance():
 def get_mask(origin_nn_input_idx, dynamic_input, instances, config, capacity):
     """ Returns a mask for the current nn_input"""
     batch_size = origin_nn_input_idx.shape[0]
+
     # Start with all used input positions
     mask = (dynamic_input[:, :, 1] != 0).cpu().long().numpy()
 
@@ -494,33 +495,6 @@ def get_mask(origin_nn_input_idx, dynamic_input, instances, config, capacity):
         idx_from = origin_nn_input_idx[i]
         origin_tour = instances[i].nn_input_idx_to_tour[idx_from][0]
         origin_pos = instances[i].nn_input_idx_to_tour[idx_from][1]
-
-        # Calculate total net demand of the origin tour (positive for delivery, negative for pickup)
-        net_demand_origin_tour = sum([stop[1] for stop in origin_tour])
-
-        total_distance = 0
-
-        for i in range(len(origin_tour) - 1):
-            loc_idx_1 = origin_tour[i][0]  # Location index of the current stop
-            loc_idx_2 = origin_tour[i + 1][0]  # Location index of the next stop
-            loc1 = instances[i].original_locations[loc_idx_1]
-            loc2 = instances[i].original_locations[loc_idx_2]
-            total_distance += calculate_distance_matrix_great_circle_m([{'lat': loc1[0], 'lng': loc1[1]},{'lat': loc2[0], 'lng': loc2[1]}])[0][1]
-
-        total_distance_km = total_distance / 1000
-
-        for j in range(dynamic_input.shape[1]):
-            # Net demand of the destination tour
-            destination_tour_idx = instances[i].nn_input_idx_to_tour[j][0]
-            net_demand_destination_tour = sum([stop[1] for stop in destination_tour_idx])
-
-            # Check if combined demand exceeds capacity
-            if abs(net_demand_origin_tour + net_demand_destination_tour) > capacity:
-                mask[i, j] = 0
-
-        # Mask out routes that are longer than 200 km
-        if total_distance_km > 200:
-            mask[i, :] = 0
 
         # Find the start of the tour in the nn input
         # e.g. for the tour [2, 3] two entries in nn input exists
@@ -534,14 +508,27 @@ def get_mask(origin_nn_input_idx, dynamic_input, instances, config, capacity):
         # Do not allow origin location = destination location
         mask[i, idx_from] = 0
 
+        total_distance = 0
+        for j in range(len(origin_tour) - 1):
+            loc_idx_1 = origin_tour[j][0]  # Location index of the current stop
+            loc_idx_2 = origin_tour[j + 1][0]  # Location index of the next stop
+
+            loc1 = instances[i].original_locations[loc_idx_1]
+            loc2 = instances[i].original_locations[loc_idx_2]
+
+            total_distance += calculate_distance_matrix_great_circle_m([{'lat': loc1[0], 'lng': loc1[1]},{'lat': loc2[0], 'lng': loc2[1]}])[0][1]
+
+        total_distance_km = total_distance / 1000
+
+        if total_distance_km > 200:
+            mask[i, :] = 0
+
     mask = torch.from_numpy(mask)
 
-    # # tensor com origens
-    # origin_tour_demands = dynamic_input[torch.arange(batch_size), origin_nn_input_idx, 0]
+    origin_tour_demands = dynamic_input[torch.arange(batch_size), origin_nn_input_idx, 0]
 
-    # combined_demand = origin_tour_demands.unsqueeze(1).expand(batch_size, dynamic_input.shape[1]) + dynamic_input[:, :,0]
-    
-    # mask[combined_demand > capacity] = 0
+    combined_demand = origin_tour_demands.unsqueeze(1).expand(batch_size, dynamic_input.shape[1]) + dynamic_input[:, :,0]
+    #mask[abs(combined_demand) > capacity] = 0
 
     mask[:, 0] = 1  # Always allow to go to the depot
 
