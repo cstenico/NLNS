@@ -325,10 +325,8 @@ def load_training_dataset(batch_size, nb_train_batches, path, config):
                     print(full_path)
                     instances.append(get_instance_from_json(full_path, config.load_partial_instance, calculate_real_distance=config.calculate_real_distance))
     
-    mult_instances = int((batch_size * nb_train_batches) / len(instances))
+    mult_instances = int((batch_size * nb_train_batches) / len(instances)) + 1
     instances = instances * mult_instances
-
-    print(f"Len instances {len(instances)}")
     
     return instances
 

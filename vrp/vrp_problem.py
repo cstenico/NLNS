@@ -452,6 +452,8 @@ class VRPInstance():
             raise Exception('Solution could not be verified.')
 
         for tour in self.solution:
+            print("verify capacity")
+            print(sum([t[1] for t in tour]))
             if sum([t[1] for t in tour]) > self.capacity:
                 raise Exception('Solution could not be verified.')
 
