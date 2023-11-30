@@ -1,0 +1,45 @@
+s[INFO]Started
+[INFO]Call: main.py--modeeval_single--model_pathruns/MODEL_050_PA_0_TRAIN_2800_BATCHES/models--instance_pathdata/050/vrppd-instances-1.0/dev/pa-0/cvrp-0-pa-90.json--lns_nb_cpus10--round_distances--lns_timelimit600--lns_reheating_nb10--devicecpu--nb_runs1--run_nameSEARCH_050_PA_0_MODEL_050_PA_0_2800
+[INFO]Version: 0.3.0
+[INFO]PARAMETERS:
+[INFO]actor_lr: 0.0001
+[INFO]batch_size: 256
+[INFO]calculate_real_distance: False
+[INFO]create_training_dataset: False
+[INFO]critic_hidden_size: 128
+[INFO]critic_lr: 0.0005
+[INFO]device: cpu
+[INFO]instance_blueprint: ALTR_20
+[INFO]instance_path: data/050/vrppd-instances-1.0/dev/pa-0/cvrp-0-pa-90.json
+[INFO]lns_Z_param: 0.8
+[INFO]lns_adaptive_search: False
+[INFO]lns_batch_size: 300
+[INFO]lns_destruction: P
+[INFO]lns_destruction_p: 0.3
+[INFO]lns_max_iterations: 50000
+[INFO]lns_nb_cpus: 10
+[INFO]lns_reheating_nb: 10
+[INFO]lns_t_max: 1000
+[INFO]lns_t_min: 10
+[INFO]lns_timelimit: 600
+[INFO]lns_timelimit_validation: 150.0
+[INFO]load_partial_instance: False
+[INFO]max_grad_norm: 2.0
+[INFO]mode: eval_single
+[INFO]model_path: runs/MODEL_050_PA_0_TRAIN_2800_BATCHES/models
+[INFO]nb_batches_training_set: 1500
+[INFO]nb_runs: 1
+[INFO]nb_train_batches: 250000
+[INFO]output_path: /Users/cstenico/Documents/shire/banana/NLNS/runs/run_SEARCH_050_PA_0_MODEL_050_PA_0_2800_2023-11-29 20:45:03.461206
+[INFO]pointer_hidden_size: 128
+[INFO]round_distances: True
+[INFO]run_name: SEARCH_050_PA_0_MODEL_050_PA_0_2800
+[INFO]split_delivery: False
+[INFO]test_size: 2000
+[INFO]training_path: train_instances/PA_0
+[INFO]valid_size: 500
+[INFO]validation_seed: 0
+[INFO]----------
+[INFO]### Single instance search ###
+[INFO]Starting solving a single instance JSON
+[INFO]NLNS single search evaluation results: Total Nb. Runs: 1, Mean Costs: 1191352.000 Mean Runtime (s): 634.6
