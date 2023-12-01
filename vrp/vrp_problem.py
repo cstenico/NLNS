@@ -53,7 +53,7 @@ class VRPInstance():
             closest_delivery_idx = self.get_n_closest_locations_to(self.solution[-1][-1][0], delivery_mask, 1)[0]
             customer_demand = self.demand[closest_delivery_idx]
 
-            if current_load + customer_demand <= self.capacity:
+            if current_load + abs(customer_demand) <= self.capacity:
                 delivery_mask[closest_delivery_idx] = False
                 self.solution[-1].append([int(closest_delivery_idx), int(customer_demand), None])
                 current_load += customer_demand
