@@ -42,7 +42,7 @@ class VRPInstance():
         cur_load = self.capacity
         mask = np.array([True] * (self.nb_customers + 1))
         cur_distance = 0  # Current distance of the tour
-        max_distance_km = 200  # Maximum distance in km
+        max_distance_km = 1000  # Maximum distance in km
         cur_pickup_load = 0
         cur_delivery_load = self.capacity
         mask[0] = False
