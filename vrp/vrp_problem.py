@@ -36,44 +36,57 @@ class VRPInstance():
         return order[:n]
 
     def create_initial_solution(self):
-        """Create an initial solution for this instance, first handling all deliveries and then all pickups."""
-        self.solution = []  # Start with an empty solution
-        current_load = 0    # Current load of the vehicle
+        """Create an initial solution for this instance, first focusing on deliveries and then adding pickups."""
+        self.solution = [[[0, 0, 0]], [[0, 0, 0]]] # Start with an empty tour starting and ending at the depot
+        current_load = 0  # Current load of the vehicle
 
-        # Separate customers into deliveries and pickups
-        delivery_customers = [i for i, demand in enumerate(self.demand) if demand < 0]
-        pickup_customers = [i for i, demand in enumerate(self.demand) if demand > 0]
+        delivery_solution = [[[0, 0, 0]], [[0, 0, 0]]]
+        pickup_solution = [[[0, 0, 0]], [[0, 0, 0]]]
 
-        # Handle all deliveries
-        current_tour = [[0, 0, 0]]  # Start a new tour from the depot
-        for customer in delivery_customers:
-            if current_load - abs(self.demand[customer]) <= self.capacity:
-                current_tour.append([customer, self.demand[customer], None])
-                current_load -= abs(self.demand[customer])
+        # Adjusted mask creation
+        delivery_mask = np.array([False] * len(self.locations))
+        pickup_mask = np.array([False] * len(self.locations))
+
+        for i, demand in enumerate(self.demand):
+            if demand < 0:
+                delivery_mask[i] = True  # Mark delivery customers
+            elif demand > 0:
+                pickup_mask[i] = True  # Mark pickup customers
+
+        # Exclude depot (assuming index 0 is the depot)
+        delivery_mask[0] = False
+        pickup_mask[0] = False
+
+        # First, handle all deliveries
+        while delivery_mask.any():
+            closest_customer_idx = self.get_n_closest_locations_to(delivery_solution[-1][-1][0], delivery_mask, 1)[0]
+            if abs(self.demand[closest_customer_idx]) <= current_load:
+                delivery_mask[closest_customer_idx] = False
+                delivery_solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
+                current_load -= abs(self.demand[closest_customer_idx])
             else:
-                # Finish the current tour and start a new one
-                current_tour.append([0, 0, 0])  # Return to the depot
-                self.solution.append(current_tour)
-                current_tour = [[0, 0, 0], [customer, self.demand[customer], None]]
-                current_load = -abs(self.demand[customer])
-        current_tour.append([0, 0, 0])  # End the last delivery tour
-        self.solution.append(current_tour)
+                delivery_solution[-1].append([0, 0, 0])  # End the current tour at the depot
+                delivery_solution.append([[0, 0, 0]])  # Start a new tour
+                current_load = self.capacity
+        
+        delivery_solution[-1].append([0, 0, 0])
 
-        # Handle all pickups
-        current_tour = [[0, 0, 0]]  # Start a new tour from the depot
-        current_load = 0  # Reset the load for pickup tours
-        for customer in pickup_customers:
-            if current_load + self.demand[customer] <= self.capacity:
-                current_tour.append([customer, self.demand[customer], None])
-                current_load += self.demand[customer]
+        # Then handle all pickups
+        while pickup_mask.any():
+            closest_customer_idx = self.get_n_closest_locations_to(pickup_solution[-1][-1][0], pickup_mask, 1)[0]
+            if abs(self.demand[closest_customer_idx]) <= current_load:
+                pickup_mask[closest_customer_idx] = False
+                pickup_solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
+                current_load -= abs(self.demand[closest_customer_idx])
             else:
-                # Finish the current tour and start a new one
-                current_tour.append([0, 0, 0])  # Return to the depot
-                self.solution.append(current_tour)
-                current_tour = [[0, 0, 0], [customer, self.demand[customer], None]]
-                current_load = self.demand[customer]
-        current_tour.append([0, 0, 0])  # End the last pickup tour
-        self.solution.append(current_tour)
+                pickup_solution[-1].append([0, 0, 0])  # End the current tour at the depot
+                pickup_solution.append([[0, 0, 0]])  # Start a new tour
+                current_load = self.capacity
+        
+        pickup_solution[-1].append([0, 0, 0])
+
+        self.solution = pickup_solution + delivery_solution
+
 
         # # Fit pickups into the existing tours
         # pickup_only_solution = []  # A tour dedicated to pickups
