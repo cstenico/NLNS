@@ -36,135 +36,44 @@ class VRPInstance():
         return order[:n]
 
     def create_initial_solution(self):
-
         """Create an initial solution for this instance using a greedy heuristic."""
-        self.solution = [[[0, 0, 0]], [[0, 0, 0]]]
+        self.solution = [[[0, 0, 0]]]  # Start with an empty tour starting and ending at the depot
         cur_load = 0
+        cur_distance = 0  # Current distance of the tour
+        max_distance_km = 200  # Maximum distance in km
         mask = np.array([True] * (self.nb_customers + 1))
         mask[0] = False
+
         while mask.any():
             closest_customer_idx = self.get_n_closest_locations_to(self.solution[-1][-1][0], mask, 1)[0]
-            if -self.capacity <= cur_load + self.demand[closest_customer_idx] <= self.capacity:
+            added_distance = self.get_costs_for_segment(self.solution[-1][-1][0], closest_customer_idx)
+
+            if -self.capacity <= cur_load + self.demand[closest_customer_idx] <= self.capacity and cur_distance + added_distance <= max_distance_km:
                 mask[closest_customer_idx] = False
                 self.solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
-                cur_load -= self.demand[closest_customer_idx]
+                cur_load += self.demand[closest_customer_idx]
+                cur_distance += added_distance
             else:
-                self.solution[-1].append([0, 0, 0])
-                self.solution.append([[0, 0, 0]])
+                self.solution[-1].append([0, 0, 0])  # End the current tour at the depot
+                self.solution.append([[0, 0, 0]])  # Start a new tour
                 cur_load = 0
+                cur_distance = 0  # Reset distance for new tour
         self.solution[-1].append([0, 0, 0])
 
-
-
-        # """Create an initial solution for this instance, first focusing on deliveries and then adding pickups."""
-        # self.solution = [[[0, 0, 0]], [[0, 0, 0]]] # Start with an empty tour starting and ending at the depot
-        # current_load = 0  # Current load of the vehicle
-
-        # delivery_solution = [[[0, 0, 0]], [[0, 0, 0]]]
-        # pickup_solution = [[[0, 0, 0]], [[0, 0, 0]]]
-
-        # # Adjusted mask creation
-        # delivery_mask = np.array([False] * len(self.locations))
-        # pickup_mask = np.array([False] * len(self.locations))
-
-        # for i, demand in enumerate(self.demand):
-        #     if demand < 0:
-        #         delivery_mask[i] = True  # Mark delivery customers
-        #     elif demand > 0:
-        #         pickup_mask[i] = True  # Mark pickup customers
-
-        # # Exclude depot (assuming index 0 is the depot)
-        # delivery_mask[0] = False
-        # pickup_mask[0] = False
-
-        # # First, handle all deliveries
-        # while delivery_mask.any():
-        #     closest_customer_idx = self.get_n_closest_locations_to(delivery_solution[-1][-1][0], delivery_mask, 1)[0]
-        #     if abs(self.demand[closest_customer_idx]) <= current_load:
-        #         delivery_mask[closest_customer_idx] = False
-        #         delivery_solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
-        #         current_load -= abs(self.demand[closest_customer_idx])
-        #     else:
-        #         delivery_solution[-1].append([0, 0, 0])  # End the current tour at the depot
-        #         delivery_solution.append([[0, 0, 0]])  # Start a new tour
-        #         current_load = self.capacity
-        
-        # delivery_solution[-1].append([0, 0, 0])
-
-        # with pickup_mask_any():
-        #     for tour in self.solution:
-        #         closest_customer_idx = self.get_n_closest_locations_to(delivery_solution[-1][-1][0], delivery_mask, 1)[0]
-
-
-
-        # # # Then handle all pickups
-        # # while pickup_mask.any():
-        # #     closest_customer_idx = self.get_n_closest_locations_to(pickup_solution[-1][-1][0], pickup_mask, 1)[0]
-        # #     if abs(self.demand[closest_customer_idx]) <= current_load:
-        # #         pickup_mask[closest_customer_idx] = False
-        # #         pickup_solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
-        # #         current_load -= abs(self.demand[closest_customer_idx])
-        # #     else:
-        # #         pickup_solution[-1].append([0, 0, 0])  # End the current tour at the depot
-        # #         pickup_solution.append([[0, 0, 0]])  # Start a new tour
-        # #         current_load = self.capacity
-        
-        # # pickup_solution[-1].append([0, 0, 0])
-
-        # # self.solution = pickup_solution + delivery_solution
-
-
-        # # Fit pickups into the existing tours
-        # pickup_only_solution = []  # A tour dedicated to pickups
-        # current_load_pickup_tour = 0
-
-        # while pickup_mask.any():
-
-        # for pickup_customer in pickup_customers:
-        #     pickup_fitted = False
-
-        #     for tour in self.solution:
-        #         best_insertion_point = None
-        #         max_capacity_at_insertion = 0
-
-        #         for i in range(len(tour) - 1):
-        #             # Calculate the available capacity at this point in the tour
-        #             delivered_capacity = sum(self.demand[tour[j][0]] for j in range(i + 1))
-        #             capacity_available = self.capacity + delivered_capacity
-
-        #             if capacity_available >= self.demand[pickup_customer] and capacity_available > max_capacity_at_insertion:
-        #                 best_insertion_point = i
-        #                 max_capacity_at_insertion = capacity_available
-
-        #         if best_insertion_point is not None:
-        #             # Insert the pickup at the best point found in this tour
-        #             tour.insert(best_insertion_point + 1, [pickup_customer, self.demand[pickup_customer], None])
-        #             pickup_fitted = True
-        #             break
-
-        #     if not pickup_fitted:
-        #         # Check if the pickup fits in the pickup-only tour
-        #         if current_load_pickup_tour + self.demand[pickup_customer] <= self.capacity:
-        #             pickup_only_solution.append([pickup_customer, self.demand[pickup_customer], None])
-        #             current_load_pickup_tour += self.demand[pickup_customer]
-        #         else:
-        #             # If it doesn't fit, conclude the current pickup tour and start a new one
-        #             if pickup_only_solution:  # If the current pickup tour is not empty
-        #                 pickup_only_solution.append([0, 0, 0])  # End the current tour at the depot
-        #                 self.solution.append(pickup_only_solution)  # Add the completed tour to the solution
-        #                 pickup_only_solution = []  # Reset for a new pickup tour
-
-        #             # Start a new pickup tour with the current pickup
-        #             pickup_only_solution.append([0, 0, 0])  # Start from the depot
-        #             pickup_only_solution.append([pickup_customer, self.demand[pickup_customer], None])
-        #             current_load_pickup_tour = self.demand[pickup_customer]
-
-        # # If there are pickups in the pickup-only solution, add it as a separate tour
-        # if pickup_only_solution:
-        #     pickup_only_solution.insert(0, [0, 0, 0])  # Start from the depot
-        #     pickup_only_solution.append([0, 0, 0])    # Return to the depot
-        #     self.solution.append(pickup_only_solution)
-
+    def get_costs_for_segment(self, from_idx, to_idx, round=False):
+        """Calculate the cost/distance between two locations."""
+        if np.isnan(self.costs_memory[from_idx, to_idx]):
+            cc = calculate_distance_matrix_great_circle_m(
+                [
+                    {'lat': self.original_locations[from_idx, 0], 'lng': self.original_locations[from_idx, 1]},
+                    {'lat': self.original_locations[to_idx, 0], 'lng': self.original_locations[to_idx, 1]},
+                ])[0][1]
+            if round:
+                cc = np.round(cc)
+            self.costs_memory[from_idx, to_idx] = cc
+        else:
+            cc = self.costs_memory[from_idx, to_idx]
+        return cc / 1000  # Convert to kilometers
 
 
     def get_costs_memory(self, round):
