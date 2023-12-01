@@ -73,7 +73,12 @@ class VRPInstance():
             cur_delivery_load = self.capacity
             cur_pickup_load = 0
             cur_distance = 0  # Reset distance for new tour
-        self.solution[-1].append([0, 0, 0])
+        # End the last tour at the depot if it has customers
+        if len(self.solution[-1]) > 1:
+            self.solution[-1].append([0, 0, 0])
+        else:
+            # Remove the last empty tour if it has no customers
+            self.solution.pop(-1)
 
 
     def get_costs_for_segment(self, from_idx, to_idx, round=False):
