@@ -42,7 +42,7 @@ class VRPInstance():
         cur_load = self.capacity
         mask = np.array([True] * (self.nb_customers + 1))
         cur_distance = 0  # Current distance of the tour
-        max_distance_km = 1000  # Maximum distance in km
+        #max_distance_km = 1000  # Maximum distance in km
         cur_pickup_load = 0
         cur_delivery_load = self.capacity
         mask[0] = False
@@ -54,14 +54,14 @@ class VRPInstance():
                 added_distance = self.get_costs_for_segment(self.solution[-1][-1][0], idx)
 
                 if self.demand[idx] > 0:
-                    if cur_pickup_load + self.demand[idx] <= self.capacity and cur_distance + added_distance <= max_distance_km:
+                    if cur_pickup_load + self.demand[idx] <= self.capacity:# and cur_distance + added_distance <= max_distance_km:
                         mask[idx] = False
                         self.solution[-1].append([int(idx), int(self.demand[idx]), None])
                         #cur_load -= self.demand[idx]
                         cur_distance += added_distance
                         cur_pickup_load = cur_pickup_load + self.demand[idx]
                 if self.demand[idx] < 0:
-                    if cur_delivery_load + self.demand[idx] >= 0 and cur_distance + added_distance <= max_distance_km:
+                    if cur_delivery_load + self.demand[idx] >= 0: #and cur_distance + added_distance <= max_distance_km:
                         mask[idx] = False
                         self.solution[-1].append([int(idx), int(self.demand[idx]), None])
                         #cur_load -= self.demand[idx]
