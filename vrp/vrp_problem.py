@@ -36,29 +36,30 @@ class VRPInstance():
         return order[:n]
 
     def create_initial_solution(self):
-        """Create an initial solution for this instance using a greedy heuristic."""
-        self.solution = [[[0, 0, 0]]]  # Start with an empty tour starting and ending at the depot
-        cur_load = 0
-        cur_distance = 0  # Current distance of the tour
-        max_distance_km = 200  # Maximum distance in km
-        mask = np.array([True] * (self.nb_customers + 1))
-        mask[0] = False
 
+        """Create an initial solution for this instance using a greedy heuristic."""
+        self.solution = [[[0, 0, 0]], [[0, 0, 0]]]
+        cur_load = self.capacity
+        mask = np.array([True] * (self.nb_customers + 1))
+        cur_distance = 0  # Current distance of the tour
+        max_distance_km = 240  # Maximum distance in km
+        mask[0] = False
         while mask.any():
             closest_customer_idx = self.get_n_closest_locations_to(self.solution[-1][-1][0], mask, 1)[0]
             added_distance = self.get_costs_for_segment(self.solution[-1][-1][0], closest_customer_idx)
 
-            if -self.capacity <= cur_load + self.demand[closest_customer_idx] <= self.capacity: #and cur_distance + added_distance <= max_distance_km:
+            if self.demand[closest_customer_idx] <= cur_load and cur_distance + added_distance <= max_distance_km:
                 mask[closest_customer_idx] = False
                 self.solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
-                cur_load += self.demand[closest_customer_idx]
+                cur_load -= self.demand[closest_customer_idx]
                 cur_distance += added_distance
             else:
-                self.solution[-1].append([0, 0, 0])  # End the current tour at the depot
-                self.solution.append([[0, 0, 0]])  # Start a new tour
-                cur_load = 0
+                self.solution[-1].append([0, 0, 0])
+                self.solution.append([[0, 0, 0]])
+                cur_load = self.capacity
                 cur_distance = 0  # Reset distance for new tour
         self.solution[-1].append([0, 0, 0])
+
 
     def get_costs_for_segment(self, from_idx, to_idx, round=False):
         """Calculate the cost/distance between two locations."""
@@ -74,7 +75,6 @@ class VRPInstance():
         else:
             cc = self.costs_memory[from_idx, to_idx]
         return cc / 1000  # Convert to kilometers
-
 
     def get_costs_memory(self, round):
         """Return the cost of the current complete solution. Uses a memory to improve performance."""
