@@ -70,26 +70,32 @@ class VRPInstance():
         pickup_mask[0] = False  # Exclude depot
 
         # Fit pickups into the existing tours
+        pickup_only_solution = []  # A tour dedicated to pickups
+        current_load_pickup_tour = 0
+
         for tour in self.solution:
-            if len(tour) > 2:  # Tours with only depot start and end are ignored
-                for i in range(len(tour) - 1):  # Iterate over pairs of locations in a tour
-                    from_idx = tour[i][0]
-                    to_idx = tour[i + 1][0]
+            for i in range(len(tour) - 1):
+                from_idx = tour[i][0]
+                to_idx = tour[i + 1][0]
 
-                    closest_pickup_idx = self.get_n_closest_locations_to(from_idx, pickup_mask, 1)[0]
-                    if pickup_mask[closest_pickup_idx]:
-                        pickup_demand = self.demand[closest_pickup_idx]
+                closest_pickup_idx = self.get_n_closest_locations_to(from_idx, pickup_mask, 1)[0]
+                if pickup_mask[closest_pickup_idx]:
+                    pickup_demand = self.demand[closest_pickup_idx]
 
-                        # Check if the pickup can be fitted without exceeding capacity
-                        if current_load + pickup_demand <= self.capacity:
+                    if current_load + pickup_demand <= self.capacity:
+                        pickup_mask[closest_pickup_idx] = False
+                        tour.insert(i + 1, [int(closest_pickup_idx), int(pickup_demand), None])
+                        current_load += pickup_demand
+                    else:
+                        # If the pickup does not fit, consider adding it to the pickup-only tour
+                        if current_load_pickup_tour + pickup_demand <= self.capacity:
+                            pickup_only_solution.append([int(closest_pickup_idx), int(pickup_demand), None])
+                            current_load_pickup_tour += pickup_demand
                             pickup_mask[closest_pickup_idx] = False
-                            # Insert pickup before moving to the next delivery point
-                            tour.insert(i + 1, [int(closest_pickup_idx), int(pickup_demand), None])
-                            current_load += pickup_demand
 
-                    # Reset the load at each depot visit
-                    if to_idx == 0:
-                        current_load = 0
+                if to_idx == 0:
+                    current_load = 0
+
 
     def get_costs_memory(self, round):
         """Return the cost of the current complete solution. Uses a memory to improve performance."""
