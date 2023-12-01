@@ -48,7 +48,7 @@ class VRPInstance():
             closest_customer_idx = self.get_n_closest_locations_to(self.solution[-1][-1][0], mask, 1)[0]
             added_distance = self.get_costs_for_segment(self.solution[-1][-1][0], closest_customer_idx)
 
-            if -self.capacity <= cur_load + self.demand[closest_customer_idx] <= self.capacity #and cur_distance + added_distance <= max_distance_km:
+            if -self.capacity <= cur_load + self.demand[closest_customer_idx] <= self.capacity: #and cur_distance + added_distance <= max_distance_km:
                 mask[closest_customer_idx] = False
                 self.solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
                 cur_load += self.demand[closest_customer_idx]
