@@ -10,85 +10,88 @@ import search
 
 
 def lns_single_seach_job(args):
-    id, config, instance_path, model_path, queue_jobs, queue_results, pkl_instance_id = args
+    try:
+        id, config, instance_path, model_path, queue_jobs, queue_results, pkl_instance_id = args
 
-    operator_pairs = search.load_operator_pairs(model_path, config)
-    instance = read_instance(instance_path, pkl_instance_id)
+        operator_pairs = search.load_operator_pairs(model_path, config)
+        instance = read_instance(instance_path, pkl_instance_id)
 
-    T_min = config.lns_t_min
+        T_min = config.lns_t_min
 
-    # Repeat until the process is terminated
-    while True:
-        solution, incumbent_cost = queue_jobs.get()
-        incumbent_solution = deepcopy(solution)
-        cur_cost = np.inf
-        instance.solution = solution
-        start_time_reheating = time.time()
+        # Repeat until the process is terminated
+        while True:
+            solution, incumbent_cost = queue_jobs.get()
+            incumbent_solution = deepcopy(solution)
+            cur_cost = np.inf
+            instance.solution = solution
+            start_time_reheating = time.time()
 
-        print("Initialized solution")
+            print("Initialized solution")
 
-        # Create a batch of copies of the same instances that can be repaired in parallel
-        instance_copies = [deepcopy(instance) for _ in range(config.lns_batch_size)]
+            # Create a batch of copies of the same instances that can be repaired in parallel
+            instance_copies = [deepcopy(instance) for _ in range(config.lns_batch_size)]
 
-        iter = -1
-        # Repeat until the time limit of one reheating iteration is reached
-        while time.time() - start_time_reheating < config.lns_timelimit / config.lns_reheating_nb:
-            iter += 1
+            iter = -1
+            # Repeat until the time limit of one reheating iteration is reached
+            while time.time() - start_time_reheating < config.lns_timelimit / config.lns_reheating_nb:
+                iter += 1
 
-            print("Start reheating")
+                print("Start reheating")
 
-            # Set the first config.lns_Z_param percent of the instances/solutions in the batch
-            # to the last accepted solution
-            for i in range(int(config.lns_Z_param * config.lns_batch_size)):
-                instance_copies[i] = deepcopy(instance)
+                # Set the first config.lns_Z_param percent of the instances/solutions in the batch
+                # to the last accepted solution
+                for i in range(int(config.lns_Z_param * config.lns_batch_size)):
+                    instance_copies[i] = deepcopy(instance)
 
-            # Select an LNS operator pair (destroy + repair operator)
-            selected_operator_pair_id = np.random.randint(0, len(operator_pairs))
-            actor = operator_pairs[selected_operator_pair_id].model
-            destroy_procedure = operator_pairs[selected_operator_pair_id].destroy_procedure
-            p_destruction = operator_pairs[selected_operator_pair_id].p_destruction
+                # Select an LNS operator pair (destroy + repair operator)
+                selected_operator_pair_id = np.random.randint(0, len(operator_pairs))
+                actor = operator_pairs[selected_operator_pair_id].model
+                destroy_procedure = operator_pairs[selected_operator_pair_id].destroy_procedure
+                p_destruction = operator_pairs[selected_operator_pair_id].p_destruction
 
-            print("Destroy")
-            # Destroy instances
-            search.destroy_instances(instance_copies, destroy_procedure, p_destruction)
+                print("Destroy")
+                # Destroy instances
+                search.destroy_instances(instance_copies, destroy_procedure, p_destruction)
 
-            # Repair instances
-            for i in range(int(len(instance_copies) / config.lns_batch_size)):
-                print("Repair")
-                with torch.no_grad():
-                    repair.repair(
-                        instance_copies[i * config.lns_batch_size: (i + 1) * config.lns_batch_size], actor, config)
+                # Repair instances
+                for i in range(int(len(instance_copies) / config.lns_batch_size)):
+                    print("Repair")
+                    with torch.no_grad():
+                        repair.repair(
+                            instance_copies[i * config.lns_batch_size: (i + 1) * config.lns_batch_size], actor, config)
 
-            print("Costs Memory")
-            costs = [instance.get_costs_memory(config.round_distances) for instance in instance_copies]
+                print("Costs Memory")
+                costs = [instance.get_costs_memory(config.round_distances) for instance in instance_copies]
 
-            # Calculate the T_max and T_factor values for simulated annealing in the first iteration
-            if iter == 0:
-                q75, q25 = np.percentile(costs, [75, 25])
-                T_max = q75 - q25
-                T_factor = -math.log(T_max / T_min)
-                print("tmax", T_max)
+                # Calculate the T_max and T_factor values for simulated annealing in the first iteration
+                if iter == 0:
+                    q75, q25 = np.percentile(costs, [75, 25])
+                    T_max = q75 - q25
+                    T_factor = -math.log(T_max / T_min)
+                    print("tmax", T_max)
 
-            min_costs = min(costs)
+                min_costs = min(costs)
 
-            print("Min costs")
+                print("Min costs")
 
-            # Update incumbent if a new best solution is found
-            if min_costs <= incumbent_cost:
-                incumbent_solution = deepcopy(instance_copies[np.argmin(costs)].solution)
-                incumbent_cost = min_costs
+                # Update incumbent if a new best solution is found
+                if min_costs <= incumbent_cost:
+                    incumbent_solution = deepcopy(instance_copies[np.argmin(costs)].solution)
+                    incumbent_cost = min_costs
 
-            # Calculate simulated annealing temperature
-            T = T_max * math.exp(
-                T_factor * (time.time() - start_time_reheating) / (config.lns_timelimit / config.lns_reheating_nb))
+                # Calculate simulated annealing temperature
+                T = T_max * math.exp(
+                    T_factor * (time.time() - start_time_reheating) / (config.lns_timelimit / config.lns_reheating_nb))
 
-            # Accept a solution if the acceptance criteria is fulfilled
-            if min_costs <= cur_cost or np.random.rand() < math.exp(-(min(costs) - cur_cost) / T):
-                instance.solution = instance_copies[np.argmin(costs)].solution
-                cur_cost = min_costs
+                # Accept a solution if the acceptance criteria is fulfilled
+                if min_costs <= cur_cost or np.random.rand() < math.exp(-(min(costs) - cur_cost) / T):
+                    instance.solution = instance_copies[np.argmin(costs)].solution
+                    cur_cost = min_costs
 
-        queue_results.put([incumbent_solution, incumbent_cost])
+            queue_results.put([incumbent_solution, incumbent_cost])
 
+    except Exception as e:
+        print("Exception in lns_single_search job: {0}".format(e))
 
 
 def lns_single_search_mp(instance_path, timelimit, config, model_path, pkl_instance_id=None):
