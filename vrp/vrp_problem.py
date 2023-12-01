@@ -42,21 +42,39 @@ class VRPInstance():
         cur_load = self.capacity
         mask = np.array([True] * (self.nb_customers + 1))
         cur_distance = 0  # Current distance of the tour
-        max_distance_km = 240  # Maximum distance in km
+        max_distance_km = 200  # Maximum distance in km
+        cur_pickup_load = 0
+        cur_delivery_load = self.capacity
         mask[0] = False
         while mask.any():
             closest_customer_idx = self.get_n_closest_locations_to(self.solution[-1][-1][0], mask, 1)[0]
             added_distance = self.get_costs_for_segment(self.solution[-1][-1][0], closest_customer_idx)
 
-            if self.demand[closest_customer_idx] <= cur_load and cur_distance + added_distance <= max_distance_km:
-                mask[closest_customer_idx] = False
-                self.solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
-                cur_load -= self.demand[closest_customer_idx]
-                cur_distance += added_distance
+            if self.demand[closest_customer_idx] > 0:
+                if cur_pickup_load + self.demand[closest_customer_idx] <= self.capacity and cur_distance + added_distance <= max_distance_km:
+                    mask[closest_customer_idx] = False
+                    self.solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
+                    #cur_load -= self.demand[closest_customer_idx]
+                    cur_distance += added_distance
+                    cur_pickup_load = cur_pickup_load + self.demand[closest_customer_idx]
+            if self.demand[closest_customer_idx] < 0:
+                if cur_delivery_load + self.demand[closest_customer_idx] >= 0 and cur_distance + added_distance <= max_distance_km:
+                    mask[closest_customer_idx] = False
+                    self.solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
+                    #cur_load -= self.demand[closest_customer_idx]
+                    cur_distance += added_distance
+                    cur_delivery_load = cur_delivery_load + self.demand[closest_customer_idx]
+
+            # if self.demand[closest_customer_idx] <= cur_load and cur_distance + added_distance <= max_distance_km:
+            #     mask[closest_customer_idx] = False
+            #     self.solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
+            #     cur_load -= self.demand[closest_customer_idx]
+            #     cur_distance += added_distance
             else:
                 self.solution[-1].append([0, 0, 0])
                 self.solution.append([[0, 0, 0]])
-                cur_load = self.capacity
+                cur_delivery_load = self.capacity
+                cur_pickup_load = 0
                 cur_distance = 0  # Reset distance for new tour
         self.solution[-1].append([0, 0, 0])
 
