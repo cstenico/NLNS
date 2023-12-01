@@ -44,57 +44,71 @@ class VRPInstance():
         delivery_customers = [i for i, demand in enumerate(self.demand) if demand < 0]
         pickup_customers = [i for i, demand in enumerate(self.demand) if demand > 0]
 
-        # Create a mask for deliveries
-        delivery_mask = np.array([i in delivery_customers for i in range(self.nb_customers + 1)])
+        # Create a mask for deliveries        
+        delivery_mask = np.array([True] * (len(delivery_customers) + 1))
         delivery_mask[0] = False  # Exclude depot
 
         # First, handle all deliveries
         while delivery_mask.any():
-            closest_delivery_idx = self.get_n_closest_locations_to(self.solution[-1][-1][0], delivery_mask, 1)[0]
-            customer_demand = self.demand[closest_delivery_idx]
-
-            if current_load + abs(customer_demand) <= self.capacity:
-                delivery_mask[closest_delivery_idx] = False
-                self.solution[-1].append([int(closest_delivery_idx), int(customer_demand), None])
-                current_load += customer_demand
+            closest_customer_idx = self.get_n_closest_locations_to(self.solution[-1][-1][0], delivery_mask, 1)[0]
+            if abs(self.demand[closest_customer_idx]) <= current_load:
+                delivery_mask[closest_customer_idx] = False
+                self.solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
+                current_load -= abs(self.demand[closest_customer_idx])
             else:
                 self.solution[-1].append([0, 0, 0])  # End the current tour at the depot
                 self.solution.append([[0, 0, 0]])  # Start a new tour
-                current_load = 0
+                current_load = self.capacity
 
-        # Complete the last delivery tour
         self.solution[-1].append([0, 0, 0])
 
         # Create a mask for pickups
-        pickup_mask = np.array([i in pickup_customers for i in range(self.nb_customers + 1)])
+        pickup_mask = np.array([True] * (len(pickup_customers) + 1))
         pickup_mask[0] = False  # Exclude depot
 
         # Fit pickups into the existing tours
         pickup_only_solution = []  # A tour dedicated to pickups
         current_load_pickup_tour = 0
 
-        for tour in self.solution:
-            for i in range(len(tour) - 1):
-                from_idx = tour[i][0]
-                to_idx = tour[i + 1][0]
+        for pickup_customer in pickup_customers:
+            pickup_fitted = False
 
-                closest_pickup_idx = self.get_n_closest_locations_to(from_idx, pickup_mask, 1)[0]
-                if pickup_mask[closest_pickup_idx]:
-                    pickup_demand = self.demand[closest_pickup_idx]
+            for tour in self.solution:
+                best_insertion_point = None
+                max_capacity_at_insertion = 0
 
-                    if current_load + pickup_demand <= self.capacity:
-                        pickup_mask[closest_pickup_idx] = False
-                        tour.insert(i + 1, [int(closest_pickup_idx), int(pickup_demand), None])
-                        current_load += pickup_demand
-                    else:
-                        # If the pickup does not fit, consider adding it to the pickup-only tour
-                        if current_load_pickup_tour + pickup_demand <= self.capacity:
-                            pickup_only_solution.append([int(closest_pickup_idx), int(pickup_demand), None])
-                            current_load_pickup_tour += pickup_demand
-                            pickup_mask[closest_pickup_idx] = False
+                for i in range(len(tour) - 1):
+                    # Calculate the available capacity at this point in the tour
+                    capacity_used_until_point = sum(self.demand[tour[j][0]] for j in range(i + 1))
+                    capacity_available = self.capacity - capacity_used_until_point
 
-                if to_idx == 0:
-                    current_load = 0
+                    if capacity_available >= self.demand[pickup_customer] and capacity_available > max_capacity_at_insertion:
+                        best_insertion_point = i
+                        max_capacity_at_insertion = capacity_available
+
+                if best_insertion_point is not None:
+                    # Insert the pickup at the best point found in this tour
+                    tour.insert(best_insertion_point + 1, [pickup_customer, self.demand[pickup_customer], None])
+                    pickup_fitted = True
+                    break
+
+            if not pickup_fitted:
+                # If the pickup does not fit in any existing tour, consider adding it to the pickup-only tour
+                if current_load_pickup_tour + self.demand[pickup_customer] <= self.capacity:
+                    pickup_only_solution.append([pickup_customer, self.demand[pickup_customer], None])
+                    current_load_pickup_tour += self.demand[pickup_customer]
+                else:
+                    # If it doesn't fit in the pickup-only tour, start a new pickup tour
+                    pickup_only_solution.append([0, 0, 0])  # End the current pickup tour at the depot
+                    current_load_pickup_tour = self.demand[pickup_customer]
+                    pickup_only_solution = [[pickup_customer, self.demand[pickup_customer], None]]  # Start a new pickup tour
+
+        # If there are pickups in the pickup-only solution, add it as a separate tour
+        if pickup_only_solution:
+            pickup_only_solution.insert(0, [0, 0, 0])  # Start from the depot
+            pickup_only_solution.append([0, 0, 0])    # Return to the depot
+            self.solution.append(pickup_only_solution)
+
 
 
     def get_costs_memory(self, round):
