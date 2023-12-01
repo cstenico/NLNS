@@ -96,9 +96,9 @@ def lns_single_seach_job(args):
 
 def lns_single_search_mp(instance_path, timelimit, config, model_path, pkl_instance_id=None):
     instance = read_instance(instance_path, pkl_instance_id)
-    print(instance)
     start_time = time.time()
     instance.create_initial_solution()
+    print(instance.solution)
     incumbent_costs = instance.get_costs(config.round_distances)
     instance.verify_solution(config)
 

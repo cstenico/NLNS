@@ -99,7 +99,7 @@ def convert_json_to_vrp(file_path, output_path=None, saves=True, calculate_real_
 
         nodes.append(f"{i}\t{node_coords[0]}\t{node_coords[1]}")
 
-        demands.append(f"{i}\t{demand['size'] if demand['type'] == 'DELIVERY' else -demand['size']}")
+        demands.append(f"{i}\t{demand['size'] if demand['type'] == 'PICKUP' else -demand['size']}")
 
     # Constructing the VRP file content
     vrp_content = f"NAME : {json_data['name']}\n"

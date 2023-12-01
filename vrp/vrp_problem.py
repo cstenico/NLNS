@@ -36,22 +36,60 @@ class VRPInstance():
         return order[:n]
 
     def create_initial_solution(self):
-        """Create an initial solution for this instance using a greedy heuristic."""
-        self.solution = [[[0, 0, 0]], [[0, 0, 0]]]
-        cur_load = self.capacity
-        mask = np.array([True] * (self.nb_customers + 1))
-        mask[0] = False
-        while mask.any():
-            closest_customer_idx = self.get_n_closest_locations_to(self.solution[-1][-1][0], mask, 1)[0]
-            if self.demand[closest_customer_idx] <= cur_load:
-                mask[closest_customer_idx] = False
-                self.solution[-1].append([int(closest_customer_idx), int(self.demand[closest_customer_idx]), None])
-                cur_load -= self.demand[closest_customer_idx]
+        """Create an initial solution for this instance, first focusing on deliveries and then adding pickups."""
+        self.solution = [[[0, 0, 0]]]  # Start with an empty tour starting and ending at the depot
+        current_load = 0  # Current load of the vehicle
+
+        # Separate customers into deliveries and pickups
+        delivery_customers = [i for i, demand in enumerate(self.demand) if demand < 0]
+        pickup_customers = [i for i, demand in enumerate(self.demand) if demand > 0]
+
+        # Create a mask for deliveries
+        delivery_mask = np.array([i in delivery_customers for i in range(self.nb_customers + 1)])
+        delivery_mask[0] = False  # Exclude depot
+
+        # First, handle all deliveries
+        while delivery_mask.any():
+            closest_delivery_idx = self.get_n_closest_locations_to(self.solution[-1][-1][0], delivery_mask, 1)[0]
+            customer_demand = self.demand[closest_delivery_idx]
+
+            if current_load + customer_demand <= self.capacity:
+                delivery_mask[closest_delivery_idx] = False
+                self.solution[-1].append([int(closest_delivery_idx), int(customer_demand), None])
+                current_load += customer_demand
             else:
-                self.solution[-1].append([0, 0, 0])
-                self.solution.append([[0, 0, 0]])
-                cur_load = self.capacity
+                self.solution[-1].append([0, 0, 0])  # End the current tour at the depot
+                self.solution.append([[0, 0, 0]])  # Start a new tour
+                current_load = 0
+
+        # Complete the last delivery tour
         self.solution[-1].append([0, 0, 0])
+
+        # Create a mask for pickups
+        pickup_mask = np.array([i in pickup_customers for i in range(self.nb_customers + 1)])
+        pickup_mask[0] = False  # Exclude depot
+
+        # Fit pickups into the existing tours
+        for tour in self.solution:
+            if len(tour) > 2:  # Tours with only depot start and end are ignored
+                for i in range(len(tour) - 1):  # Iterate over pairs of locations in a tour
+                    from_idx = tour[i][0]
+                    to_idx = tour[i + 1][0]
+
+                    closest_pickup_idx = self.get_n_closest_locations_to(from_idx, pickup_mask, 1)[0]
+                    if pickup_mask[closest_pickup_idx]:
+                        pickup_demand = self.demand[closest_pickup_idx]
+
+                        # Check if the pickup can be fitted without exceeding capacity
+                        if current_load + pickup_demand <= self.capacity:
+                            pickup_mask[closest_pickup_idx] = False
+                            # Insert pickup before moving to the next delivery point
+                            tour.insert(i + 1, [int(closest_pickup_idx), int(pickup_demand), None])
+                            current_load += pickup_demand
+
+                    # Reset the load at each depot visit
+                    if to_idx == 0:
+                        current_load = 0
 
     def get_costs_memory(self, round):
         """Return the cost of the current complete solution. Uses a memory to improve performance."""
