@@ -43,10 +43,19 @@ class VRPInstance():
         # Separate customers into deliveries and pickups
         delivery_customers = [i for i, demand in enumerate(self.demand) if demand < 0]
         pickup_customers = [i for i, demand in enumerate(self.demand) if demand > 0]
+        # Adjusted mask creation
+        delivery_mask = np.array([False] * len(self.locations))
+        pickup_mask = np.array([False] * len(self.locations))
 
-        # Create a mask for deliveries        
-        delivery_mask = np.array([True] * (len(delivery_customers) + 1))
-        delivery_mask[0] = False  # Exclude depot
+        for i, demand in enumerate(self.demand):
+            if demand < 0:
+                delivery_mask[i] = True  # Mark delivery customers
+            elif demand > 0:
+                pickup_mask[i] = True  # Mark pickup customers
+
+        # Exclude depot (assuming index 0 is the depot)
+        delivery_mask[0] = False
+        pickup_mask[0] = False
 
         # First, handle all deliveries
         while delivery_mask.any():
@@ -63,8 +72,8 @@ class VRPInstance():
         self.solution[-1].append([0, 0, 0])
 
         # Create a mask for pickups
-        pickup_mask = np.array([True] * (len(pickup_customers) + 1))
-        pickup_mask[0] = False  # Exclude depot
+        #pickup_mask = np.array([True] * (len(pickup_customers) + 1))
+        #pickup_mask[0] = False  # Exclude depot
 
         # Fit pickups into the existing tours
         pickup_only_solution = []  # A tour dedicated to pickups
