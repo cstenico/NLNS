@@ -88,7 +88,7 @@ class VRPInstance():
 
                 for i in range(len(tour) - 1):
                     # Calculate the available capacity at this point in the tour
-                    capacity_used_until_point = sum(self.demand[tour[j][0]] for j in range(i + 1))
+                    capacity_used_until_point = sum(abs(self.demand[tour[j][0]]) for j in range(i + 1))
                     capacity_available = self.capacity - capacity_used_until_point
 
                     if capacity_available >= self.demand[pickup_customer] and capacity_available > max_capacity_at_insertion:
