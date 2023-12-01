@@ -99,33 +99,33 @@ def lns_single_search_mp(instance_path, timelimit, config, model_path, pkl_insta
     start_time = time.time()
     instance.create_initial_solution()
     print([instance.solution])
-    incumbent_costs = instance.get_costs(config.round_distances)
-    instance.verify_solution(config)
+    # incumbent_costs = instance.get_costs(config.round_distances)
+    # instance.verify_solution(config)
 
-    m = Manager()
-    queue_jobs = m.Queue()
-    queue_results = m.Queue()
-    pool = Pool(processes=config.lns_nb_cpus)
-    pool.map_async(lns_single_seach_job,
-                   [(i, config, instance_path, model_path, queue_jobs, queue_results, pkl_instance_id) for i in
-                    range(config.lns_nb_cpus)])
-    # Distribute starting solution to search processes
-    for i in range(config.lns_nb_cpus):
-        queue_jobs.put([instance.solution, incumbent_costs])
+    # m = Manager()
+    # queue_jobs = m.Queue()
+    # queue_results = m.Queue()
+    # pool = Pool(processes=config.lns_nb_cpus)
+    # pool.map_async(lns_single_seach_job,
+    #                [(i, config, instance_path, model_path, queue_jobs, queue_results, pkl_instance_id) for i in
+    #                 range(config.lns_nb_cpus)])
+    # # Distribute starting solution to search processes
+    # for i in range(config.lns_nb_cpus):
+    #     queue_jobs.put([instance.solution, incumbent_costs])
 
-    while time.time() - start_time < timelimit:
-        # Receive the incumbent solution from a finished search process (reheating iteration finished)
-        result = queue_results.get()
-        if result != 0:
-            if result[1] < incumbent_costs:
-                incumbent_costs = result[1]
-                instance.solution = result[0]
-                print('incumbent_costs', incumbent_costs)
-        # Distribute incumbent solution to search processes
-        queue_jobs.put([instance.solution, incumbent_costs])
+    # while time.time() - start_time < timelimit:
+    #     # Receive the incumbent solution from a finished search process (reheating iteration finished)
+    #     result = queue_results.get()
+    #     if result != 0:
+    #         if result[1] < incumbent_costs:
+    #             incumbent_costs = result[1]
+    #             instance.solution = result[0]
+    #             print('incumbent_costs', incumbent_costs)
+    #     # Distribute incumbent solution to search processes
+    #     queue_jobs.put([instance.solution, incumbent_costs])
 
-    pool.terminate()
-    duration = time.time() - start_time
-    instance.verify_solution(config)
-    print(instance.solution)
+    # pool.terminate()
+    # duration = time.time() - start_time
+    # instance.verify_solution(config)
+    # print(instance.solution)
     return instance.get_costs(config.round_distances), duration, instance.solution
