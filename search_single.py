@@ -125,7 +125,7 @@ def lns_single_search_mp(instance_path, timelimit, config, model_path, pkl_insta
     #     queue_jobs.put([instance.solution, incumbent_costs])
 
     # pool.terminate()
-    # duration = time.time() - start_time
+    duration = time.time() - start_time
     # instance.verify_solution(config)
     # print(instance.solution)
     return instance.get_costs(config.round_distances), duration, instance.solution
