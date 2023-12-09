@@ -108,9 +108,9 @@ def train_nlns(actor, critic, run_id, config):
             training_set[training_set_batch_idx * batch_size + i] = tr_instances[i]
 
         # Log performance
-        mean_loss = np.mean(losses_actor[-250:])
-        mean_critic_loss = np.mean(losses_critic[-250:])
-        mean_reward = np.mean(rewards[-250:])
+        mean_loss = np.mean(losses_actor[-1:])
+        mean_critic_loss = np.mean(losses_critic[-1:])
+        mean_reward = np.mean(rewards[-1:])
         logging.info(
             f'Batch {batch_idx}/{config.nb_train_batches}, repair costs (reward): {mean_reward:2.3f}, loss: {mean_loss:2.6f}'
             f', critic_loss: {mean_critic_loss:2.6f}')
